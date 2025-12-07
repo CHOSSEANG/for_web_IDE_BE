@@ -1,0 +1,6 @@
+spring:
+  application:
+    name : web_IDE_for
+  h2:
+    console:
+      enabled : true
