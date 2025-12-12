@@ -38,7 +38,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # IAM user access_key_id
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # IAM user secret_access_key
-          aws-region: ap-northeast-2
+          aws-region: ap-southeast-2
 
       # AWS EC2에 접근하기 위해 보안그룹에 github ip 추가
       - name: Add Github Actions IP to Security group
