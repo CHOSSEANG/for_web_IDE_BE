@@ -26,7 +26,6 @@ public class ClerkJwtService {
     }
 
     public Map<String, Object> validate(String token){
-        log.info("===ClerkJwtService.validate");
         try {
             // 1. JWT에서 kid 추출
             String kid = getKidFromToken(token);
