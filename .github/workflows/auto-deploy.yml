@@ -32,6 +32,17 @@ jobs:
         id: ip
         uses: haythem/public-ip@v1.2
 
+      # env 환경변수 세팅
+      - name: .env Setting
+        run: |
+          echo "DB_HOST=${{secrets.DB_HOST}}" >> .env
+          echo "DB_PORT=${{secrets.DB_PORT}}" >> .env
+          echo "DB_NAME=${{secrets.DB_NAME}}" >> .env
+          echo "DB_USERNAME=${{secrets.DB_USERNAME}}" >> .env
+          echo "DB_PASSWORD=${{secrets.DB_PASSWORD}}" >> .env
+          echo "CLERK_SECRET_KEY=${{secrets.CLERK_SECRET_KEY}}" >> .env
+          echo "CLERK_WEBHOOK_SECRET_KEY=${{secrets.CLERK_WEBHOOK_SECRET_KEY}}" >> .env
+
       # AWS cli 접근을 위한 AWS 설정 추가
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
