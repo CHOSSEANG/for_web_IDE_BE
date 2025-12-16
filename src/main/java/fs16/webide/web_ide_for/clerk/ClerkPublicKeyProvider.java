@@ -22,7 +22,6 @@ public class ClerkPublicKeyProvider {
     private Map<String, PublicKey> keyCache = new HashMap<>();
 
     public PublicKey getPublicKey(String kid) {
-        log.info("===ClerkPublicKeyProvider.getPublicKey");
         if (keyCache.containsKey(kid)) {
             return keyCache.get(kid);
         }
