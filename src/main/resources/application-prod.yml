@@ -21,7 +21,7 @@ server:
   address: 0.0.0.0
 
 clerk:
-  jwks-url: https://handy-bison-11.clerk.accounts.dev/.well-known/jwks.json
-  issuer: https://handy-bison-11.clerk.accounts.dev
+  jwks-url: https://clerk.webicapp.com/.well-known/jwks.json
+  issuer: https://clerk.webicapp.com
   secret-key: ${CLERK_SECRET_KEY}
   webhook-secret-key: ${CLERK_WEBHOOK_SECRET_KEY}
