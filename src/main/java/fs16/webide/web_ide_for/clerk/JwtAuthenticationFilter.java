@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        log.info("===JwtAuthenticationFilter.doFilterInternal");
 
         String authHeader = request.getHeader("Authorization");
 
@@ -41,7 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 1. JWT 검증
                 Map<String, Object> claims = clerkJwtService.validate(token);
                 String clerkUserId = claims.get("sub").toString();
-                log.info("claim?{}",claims);
                 // 2. DB에서 유저 확인, 없으면 생성 (로그인 시점)
                 userService.findOrCreateUser(clerkUserId, claims);
 
