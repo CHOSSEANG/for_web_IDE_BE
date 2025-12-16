@@ -18,7 +18,6 @@ public class ClerkWebhookController {
 
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody Map<String,Object> payload){
-//        log.info("Webhook payload: {}", payload);
 
         String eventType = (String) payload.get("type");
         Map<String, Object> data = (Map<String, Object>) payload.get("data");
