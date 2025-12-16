@@ -2,19 +2,22 @@ spring:
   application:
     name : web_IDE_for
 
+  config:
+    import: "optional:dotenv:.env"
+
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
       hibernate:
-        ddl-auto: validate
-      show-sql: false
-      properties:
-        hibernate:
-          format_sql: false
+        format_sql: false
 
   server:
     port: 8080
