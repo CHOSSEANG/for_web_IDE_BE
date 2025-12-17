@@ -1,10 +1,13 @@
 package fs16.webide.web_ide_for.container.service;
 
+import static fs16.webide.web_ide_for.container.error.ContainerErrorCode.*;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
+import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerDeleteRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerFindRequest;
@@ -69,13 +72,13 @@ public class ContainerService {
 	 * 
 	 * @param request 컨테이너 조회 요청 DTO
 	 * @return 조회된 Container 엔티티
-	 * @throws NoSuchElementException 해당 ID의 컨테이너가 존재하지 않을 경우
+	 * @throws NoSuchElementException 해당 ID의 컨테이너가 존재하지 않을 경우ㄱㄱ
 	 */
 	@Transactional
 	public Container findContainer(ContainerFindRequest request) {
 		// 컨테이너 ID로 컨테이너 조회
 		return containerRepository.findById(request.getContainerId())
-			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getContainerId() + "인 컨테이너를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CoreException(CONTAINER_NOT_FOUND));
 	}
 
 	/**
@@ -93,7 +96,7 @@ public class ContainerService {
 
 		// 2. 컨테이너 조회
 		Container container = containerRepository.findById(request.getContainerId())
-			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getContainerId() + "인 컨테이너를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CoreException(CONTAINER_NOT_FOUND));
 
 		// 3. 컨테이너 삭제
 		containerRepository.delete(container);
@@ -117,7 +120,7 @@ public class ContainerService {
 
 		// 2. 컨테이너 조회
 		Container container = containerRepository.findById(request.getContainerId())
-			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getContainerId() + "인 컨테이너를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CoreException(CONTAINER_NOT_FOUND));
 
 		// 3. 컨테이너 이름 수정
 		container.setName(request.getName());
