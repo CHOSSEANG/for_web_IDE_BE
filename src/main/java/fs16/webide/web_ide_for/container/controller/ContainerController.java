@@ -1,13 +1,19 @@
 package fs16.webide.web_ide_for.container.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerCreateResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerListResponse;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.service.ContainerService;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +38,19 @@ public class ContainerController {
         log.info("Container creation request received: {}", request);
         Container container = containerService.createContainer(request);
         return ApiResponse.success(ContainerCreateResponse.from(container));
+    }
+
+    /**
+     * 특정 사용자의 모든 컨테이너를 조회합니다.
+     * 
+     * @param userId 컨테이너 목록을 조회할 사용자의 ID
+     * @return 사용자가 소유한 컨테이너 목록
+     */
+    @GetMapping("/list")
+    public ApiResponse<List<ContainerListResponse>> findAllContainers(@RequestParam Long userId) {
+        log.info("Container list request received for user ID: {}", userId);
+        ContainerListRequest request = new ContainerListRequest(userId);
+        List<Container> containers = containerService.findAllContainersByUserId(request);
+        return ApiResponse.success(ContainerListResponse.fromList(containers));
     }
 }
