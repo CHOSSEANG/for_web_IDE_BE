@@ -4,7 +4,6 @@ import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
-import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.user.entity.User;
@@ -24,12 +23,12 @@ public class ContainerService {
 	 * @return 저장된 Container 엔티티
 	 */
 	@Transactional
-	public Container createContainer(ContainerCreateRequest request) {
+	public Container createContainer(Container request) {
 
 		// 1. 사용자(User) 엔티티 조회 및 검증
 		// ID를 사용하여 User 엔티티를 찾습니다. 없으면 예외 발생
-		User user = userRepository.findById(request.getUserId())
-			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getUserId() + "인 사용자를 찾을 수 없습니다."));
+		User user = userRepository.findById(request.getUser().getId())
+			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getUser().getId() + "인 사용자를 찾을 수 없습니다."));
 
 		// 2. Container 엔티티 생성
 		// Container 엔티티의 @Builder를 사용한다고 가정하고 코드를 작성했습니다.

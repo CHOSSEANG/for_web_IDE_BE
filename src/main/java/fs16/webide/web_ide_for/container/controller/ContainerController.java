@@ -1,13 +1,11 @@
 package fs16.webide.web_ide_for.container.controller;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fs16.webide.web_ide_for.common.ApiResponse;
-import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.service.ContainerService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/containers")
+@RequestMapping("/container")
 @RequiredArgsConstructor
 public class ContainerController {
 
@@ -27,10 +25,10 @@ public class ContainerController {
      * @param request 컨테이너 생성 요청 DTO
      * @return 생성된 컨테이너 정보
      */
-    @PostMapping
-    public ResponseEntity<ApiResponse<Container>> createContainer(@RequestBody ContainerCreateRequest request) {
+    @PostMapping("/create")
+    public ApiResponse<Container> createContainer(@RequestBody Container request) {
         log.info("Container creation request received: {}", request);
         Container container = containerService.createContainer(request);
-        return ResponseEntity.ok(ApiResponse.success(container));
+        return ApiResponse.success(container);
     }
 }
