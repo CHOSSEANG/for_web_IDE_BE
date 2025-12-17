@@ -1,6 +1,8 @@
 package fs16.webide.web_ide_for.clerk.controller;
 
 import fs16.webide.web_ide_for.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Tag(name = "User_update", description = "유저 프로필 변경")
 @RestController
 @RequestMapping("/clerk")
 @RequiredArgsConstructor
@@ -15,7 +18,7 @@ import java.util.Map;
 public class ClerkWebhookController {
 
     private final UserService userService;
-
+    @Operation(summary = "프로필 변경", description = "이름, 프로필 이미지를 변경할 수 있습니다")
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody Map<String,Object> payload){
 

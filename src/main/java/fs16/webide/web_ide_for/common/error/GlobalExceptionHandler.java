@@ -1,5 +1,6 @@
 package fs16.webide.web_ide_for.common.error;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,7 +21,15 @@ public class GlobalExceptionHandler {
      * CoreException에 담긴 ErrorCode를 사용하여 ApiResponse 오류 응답을 생성합니다.
      */
     @ExceptionHandler(CoreException.class)
-    public ApiResponse<Void> handleCoreException(CoreException ex) {
+    public ApiResponse<Void> handleCoreException(CoreException ex ,HttpServletRequest request
+    ) {
+        String uri = request.getRequestURI();
+
+        // Swagger 요청 제외
+        if (uri.startsWith("/v3/api-docs")
+                || uri.startsWith("/swagger-ui")) {
+            throw ex;
+        }
         ErrorCode errorCode = ex.getErrorCode();
 
         logByLevel(errorCode, ex); // 로그 레벨에 따른 기록 유지
