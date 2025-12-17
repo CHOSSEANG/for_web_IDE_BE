@@ -9,6 +9,7 @@ import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerDeleteRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerFindRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerUpdateRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.user.entity.User;
@@ -99,5 +100,29 @@ public class ContainerService {
 
 		// 4. 삭제된 컨테이너 정보 반환
 		return container;
+	}
+
+	/**
+	 * 특정 ID의 컨테이너 이름을 수정합니다.
+	 * 
+	 * @param request 컨테이너 수정 요청 DTO
+	 * @return 수정된 Container 엔티티
+	 * @throws NoSuchElementException 해당 ID의 컨테이너가 존재하지 않을 경우
+	 */
+	@Transactional
+	public Container updateContainer(ContainerUpdateRequest request) {
+		// 1. 사용자 존재 여부 확인
+		userRepository.findById(request.getUserId())
+			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getUserId() + "인 사용자를 찾을 수 없습니다."));
+
+		// 2. 컨테이너 조회
+		Container container = containerRepository.findById(request.getContainerId())
+			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getContainerId() + "인 컨테이너를 찾을 수 없습니다."));
+
+		// 3. 컨테이너 이름 수정
+		container.setName(request.getName());
+
+		// 4. 수정된 컨테이너 저장 및 반환
+		return containerRepository.save(container);
 	}
 }
