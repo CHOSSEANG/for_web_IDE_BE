@@ -1,4 +1,4 @@
-package fs16.webide.web_ide_for.coding_session;
+package fs16.webide.web_ide_for.coding_session.contoller;
 
 import fs16.webide.web_ide_for.coding_session.dto.CodingTimeRequestDto;
 import fs16.webide.web_ide_for.coding_session.dto.WeeklyCodingTimeDto;
