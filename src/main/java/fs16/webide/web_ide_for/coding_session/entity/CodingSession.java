@@ -14,11 +14,15 @@ public class CodingSession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "user_id")
     private Long userId;
+    @Column(name = "container_id")
     private Long containerId;
+    @Column(name = "coding_time_ms", nullable = false)
     private Long codingTimeMs;
+    @Column(name = "record_date")
     private LocalDate recordDate;
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     public CodingSession() {
