@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 
 import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerFindRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
@@ -59,5 +60,19 @@ public class ContainerService {
 
 		// 사용자 ID로 컨테이너 목록 조회
 		return containerRepository.findAllByUserId(request.getUserId());
+	}
+
+	/**
+	 * 특정 ID의 컨테이너를 조회합니다.
+	 * 
+	 * @param request 컨테이너 조회 요청 DTO
+	 * @return 조회된 Container 엔티티
+	 * @throws NoSuchElementException 해당 ID의 컨테이너가 존재하지 않을 경우
+	 */
+	@Transactional
+	public Container findContainer(ContainerFindRequest request) {
+		// 컨테이너 ID로 컨테이너 조회
+		return containerRepository.findById(request.getContainerId())
+			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getContainerId() + "인 컨테이너를 찾을 수 없습니다."));
 	}
 }
