@@ -1,17 +1,18 @@
 package fs16.webide.web_ide_for.coding_session.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class CodingTimeRequestDto {
 
     private Long userId;
     private Long containerId;
     private Long codingTimeMs;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate recordDate;
 }
