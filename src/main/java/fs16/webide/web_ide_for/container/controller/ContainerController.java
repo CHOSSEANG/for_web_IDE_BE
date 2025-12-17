@@ -2,6 +2,8 @@ package fs16.webide.web_ide_for.container.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import fs16.webide.web_ide_for.container.service.ContainerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Tag(name = "Container", description = "컨테이너 관리 API")
 @Slf4j
 @RestController
 @RequestMapping("/container")
@@ -42,6 +45,7 @@ public class ContainerController {
      * @param request 컨테이너 생성 요청 DTO
      * @return 생성된 컨테이너 정보
      */
+    @Operation(summary = "컨테이너 생성", description = "새로운 컨테이너를 생성합니다")
     @PostMapping("/create")
     public ApiResponse<ContainerCreateResponse> createContainer(@RequestBody ContainerCreateRequest request) {
         log.info("Container creation request received: {}", request);
@@ -55,6 +59,7 @@ public class ContainerController {
      * @param userId 컨테이너 목록을 조회할 사용자의 ID
      * @return 사용자가 소유한 컨테이너 목록
      */
+    @Operation(summary = "컨테이너 목록 조회", description = "특정 사용자의 모든 컨테이너를 조회합니다")
     @GetMapping("/list")
     public ApiResponse<List<ContainerListResponse>> findAllContainers(@RequestParam Long userId) {
         log.info("Container list request received for user ID: {}", userId);
@@ -69,6 +74,7 @@ public class ContainerController {
      * @param containerId 조회할 컨테이너의 ID
      * @return 조회된 컨테이너 정보
      */
+    @Operation(summary = "컨테이너 조회", description = "특정 ID의 컨테이너를 조회합니다")
     @GetMapping("/{containerId}")
     public ApiResponse<ContainerFindResponse> findContainer(@RequestParam Long userId, @PathVariable Long containerId) {
         log.info("Container get request received for container ID: {}", containerId);
@@ -84,6 +90,7 @@ public class ContainerController {
      * @param containerId 삭제할 컨테이너의 ID
      * @return 삭제된 컨테이너 정보
      */
+    @Operation(summary = "컨테이너 삭제", description = "특정 ID의 컨테이너를 삭제합니다")
     @DeleteMapping("/{containerId}")
     public ApiResponse<ContainerDeleteResponse> deleteContainer(@RequestParam Long userId, @PathVariable Long containerId) {
         log.info("Container delete request received for container ID: {}", containerId);
@@ -100,6 +107,7 @@ public class ContainerController {
      * @param request 컨테이너 수정 요청 DTO
      * @return 수정된 컨테이너 정보
      */
+    @Operation(summary = "컨테이너 수정", description = "특정 ID의 컨테이너 이름을 수정합니다")
     @PutMapping("/{containerId}")
     public ApiResponse<ContainerUpdateResponse> updateContainer(
             @RequestParam Long userId, 

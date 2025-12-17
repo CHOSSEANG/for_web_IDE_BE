@@ -3,6 +3,7 @@ package fs16.webide.web_ide_for.container.dto;
 import java.time.LocalDateTime;
 
 import fs16.webide.web_ide_for.container.entity.Container;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
