@@ -1,5 +1,6 @@
 package fs16.webide.web_ide_for.container.dto;
 
+import fs16.webide.web_ide_for.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,14 +15,5 @@ public class ContainerCreateRequest {
 
 	// 2. 소유자 ID (필수)
 	// NOTE: 실제 서비스에서는 이 필드 대신 로그인된 사용자 세션/토큰에서 ID를 가져오는 것이 보안상 더 좋습니다.
-	private Long userId;
-
-	// 3. 기반이 될 도커 이미지 태그 (필수)
-	private String imageTag;
-
-	// 4. 컨테이너에 할당할 메모리 (선택, 기본값 설정 가능)
-	private Integer memoryLimitMb;
-
-	// 5. 컨테이너에 대한 간단한 설명 (선택)
-	private String description;
+	private User user;
 }

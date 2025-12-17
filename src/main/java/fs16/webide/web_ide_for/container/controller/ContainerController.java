@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fs16.webide.web_ide_for.common.ApiResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.service.ContainerService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class ContainerController {
      * @return 생성된 컨테이너 정보
      */
     @PostMapping("/create")
-    public ApiResponse<Container> createContainer(@RequestBody Container request) {
+    public ApiResponse<Container> createContainer(@RequestBody ContainerCreateRequest request) {
         log.info("Container creation request received: {}", request);
         Container container = containerService.createContainer(request);
         return ApiResponse.success(container);
