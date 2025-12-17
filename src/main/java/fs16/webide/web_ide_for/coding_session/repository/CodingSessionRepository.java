@@ -10,7 +10,7 @@ public interface CodingSessionRepository extends JpaRepository<CodingSession,Lon
 
     @Query("""
             SELECT COALESCE(SUM(cs.codingTimeMs),0)
-            FROM codingSession cs
+            FROM CodingSession cs
             WHERE cs.userId =:userId
             AND cs.recordDate  BETWEEN :startDate AND :endDate
             """)
