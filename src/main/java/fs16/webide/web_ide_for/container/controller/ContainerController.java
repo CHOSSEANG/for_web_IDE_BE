@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,8 @@ import fs16.webide.web_ide_for.container.dto.ContainerFindRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerFindResponse;
 import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
 import fs16.webide.web_ide_for.container.dto.ContainerListResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerUpdateRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerUpdateResponse;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.service.ContainerService;
 import lombok.RequiredArgsConstructor;
@@ -87,5 +90,25 @@ public class ContainerController {
         ContainerDeleteRequest request = new ContainerDeleteRequest(userId, containerId);
         Container container = containerService.deleteContainer(request);
         return ApiResponse.success(ContainerDeleteResponse.from(container));
+    }
+
+    /**
+     * 특정 ID의 컨테이너 이름을 수정합니다.
+     * 
+     * @param userId 사용자 ID
+     * @param containerId 수정할 컨테이너의 ID
+     * @param request 컨테이너 수정 요청 DTO
+     * @return 수정된 컨테이너 정보
+     */
+    @PutMapping("/{containerId}")
+    public ApiResponse<ContainerUpdateResponse> updateContainer(
+            @RequestParam Long userId, 
+            @PathVariable Long containerId, 
+            @RequestBody ContainerUpdateRequest request) {
+        log.info("Container update request received for container ID: {}", containerId);
+        // 경로 변수와 요청 본문의 값을 통합
+        ContainerUpdateRequest updateRequest = new ContainerUpdateRequest(userId, containerId, request.getName());
+        Container container = containerService.updateContainer(updateRequest);
+        return ApiResponse.success(ContainerUpdateResponse.from(container));
     }
 }
