@@ -1,10 +1,12 @@
 package fs16.webide.web_ide_for.container.service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
 import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.user.entity.User;
@@ -41,5 +43,21 @@ public class ContainerService {
 
 		// 3. Container 엔티티 저장
 		return containerRepository.save(newContainer);
+	}
+
+	/**
+	 * 특정 사용자의 모든 컨테이너를 조회합니다.
+	 * 
+	 * @param request 컨테이너 목록 조회 요청 DTO
+	 * @return 사용자가 소유한 컨테이너 목록
+	 */
+	@Transactional
+	public List<Container> findAllContainersByUserId(ContainerListRequest request) {
+		// 사용자 존재 여부 확인 (선택적)
+		userRepository.findById(request.getUserId())
+			.orElseThrow(() -> new NoSuchElementException("ID가 " + request.getUserId() + "인 사용자를 찾을 수 없습니다."));
+
+		// 사용자 ID로 컨테이너 목록 조회
+		return containerRepository.findAllByUserId(request.getUserId());
 	}
 }
