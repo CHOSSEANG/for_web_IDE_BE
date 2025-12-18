@@ -11,13 +11,14 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
   server:
     port: 8080
