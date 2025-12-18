@@ -1,10 +1,16 @@
 package fs16.webide.web_ide_for.user.service;
 
+import fs16.webide.web_ide_for.common.error.CommonErrorCode;
+import fs16.webide.web_ide_for.common.error.CoreException;
+import fs16.webide.web_ide_for.container_member.entity.ContainerMember;
+import fs16.webide.web_ide_for.container_member.repository.ContainerMemberRepository;
+import fs16.webide.web_ide_for.user.dto.UserSearchResponse;
 import fs16.webide.web_ide_for.user.entity.User;
 import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.*;
 
@@ -14,8 +20,9 @@ import java.util.*;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ContainerMemberRepository containerMemberRepository;
 
-    // 1.회원가입 및 로그인
+    // 회원가입 및 로그인
     public void findOrCreateUser(String clerkUserId, Map<String,Object> claims) {
 
         // 로그인
@@ -23,8 +30,7 @@ public class UserService {
         if(optionalUser.isPresent()){
             User user = optionalUser.get();
             if(!"Y".equals(user.getStatus())){
-                throw new IllegalStateException("탈퇴한 회원");
-//                throw new CoreException(CommonErrorCode.BAD_REQUEST, "탈퇴한 회원입니다.");
+                throw new CoreException(CommonErrorCode.BAD_REQUEST, "탈퇴한 회원입니다.");
             }
 
             log.info("기존 회원 로그인 : {}",clerkUserId);
@@ -40,7 +46,7 @@ public class UserService {
         // 이메일 인증된 회원만 DB 저장
         if (!isEmailVerified) {
             log.info("이메일 미인증 clerkId={}", clerkUserId);
-            throw new IllegalStateException("이메일 미인증");
+            throw new CoreException(CommonErrorCode.BAD_REQUEST, "이메일 미인증");
         }
 
         // 이름 / 이미지
@@ -61,7 +67,7 @@ public class UserService {
         log.info("새 유저 생성 완료 clerkId={}", clerkUserId);
     }
 
-    // 2. webhook - 유저 업데이트(이름 변경 / 프로필 변경)
+    // webhook - 유저 업데이트(이름 변경 / 프로필 변경)
     public void updateUser(String clerkUserId,Map<String,Object> data) {
 
         String firstName = data.getOrDefault("first_name","").toString();
@@ -100,7 +106,7 @@ public class UserService {
         }
     }
 
-    // 3. webhook - 유저 탈퇴(status = N)
+    // webhook - 유저 탈퇴(status = N)
     public void deleteUser(String clerkUserId) {
         userRepository.findByClerkId(clerkUserId)
                 .ifPresent(user -> {
@@ -110,5 +116,21 @@ public class UserService {
                 });
     }
 
+   // 컨테이너 초대 유저 검색 (이름, clerkId)
+    public List<UserSearchResponse> findUsers(Long containerId, String keyword){
+        List<User> users = userRepository.searchNameOrClerkId(keyword);
 
+        Set<Long> invitedUserIds = new HashSet<>(
+                containerMemberRepository.findUserIdsByContainerId(containerId)
+        );
+
+        return users.stream()
+                .map(user -> new UserSearchResponse(
+                        user.getId(),
+                        user.getClerkId(),
+                        user.getName(),
+                        user.getProfileImageUrl(),
+                        invitedUserIds.contains(user.getId())
+                )).toList();
+    }
 }
