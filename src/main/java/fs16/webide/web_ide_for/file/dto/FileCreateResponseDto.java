@@ -16,6 +16,6 @@ public class FileCreateResponseDto {
     private String filePath;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String fileLanguage;
+    private String fileExtension;
     private String description;
 }

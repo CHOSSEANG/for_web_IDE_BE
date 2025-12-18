@@ -89,7 +89,7 @@ public class FileService {
                 .filePath(savedFile.getPath())
                 .createdAt(savedFile.getCreatedAt())
                 .updatedAt(savedFile.getUpdatedAt())
-                .fileLanguage(savedFile.getExtension())
+                .fileExtension(savedFile.getExtension())
                 .description("파일이 생성되었습니다.")
                 .build();
     }
