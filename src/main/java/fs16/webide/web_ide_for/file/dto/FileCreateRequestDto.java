@@ -12,4 +12,5 @@ public class FileCreateRequestDto {
     private Boolean isDirectory;
     private String filePath;
     private String fileExtension;
+    private String content;
 }

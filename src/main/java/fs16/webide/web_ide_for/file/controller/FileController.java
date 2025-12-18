@@ -38,16 +38,14 @@ public class FileController {
 
     /**
      * Creates a file with content
-     * @param requestDto The file creation request
-     * @param content The content of the file
+     * @param requestDto The file creation request with content
      * @return The created file response
      */
     @PostMapping("/content")
     public ResponseEntity<ApiResponse<FileCreateResponseDto>> createFileWithContent(
-            @RequestBody FileCreateRequestDto requestDto,
-            @RequestParam String content) {
+            @RequestBody FileCreateRequestDto requestDto) {
         log.info("Creating file with content: {}", requestDto);
-        FileCreateResponseDto responseDto = fileService.createFileWithContent(requestDto, content);
+        FileCreateResponseDto responseDto = fileService.createFileWithContent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(responseDto));
     }

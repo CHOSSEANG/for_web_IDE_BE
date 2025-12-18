@@ -101,12 +101,11 @@ public class FileService {
 
     /**
      * Creates a file with content
-     * @param requestDto The file creation request
-     * @param content The content of the file
+     * @param requestDto The file creation request with content
      * @return The created file response
      */
     @Transactional
-    public FileCreateResponseDto createFileWithContent(FileCreateRequestDto requestDto, String content) {
+    public FileCreateResponseDto createFileWithContent(FileCreateRequestDto requestDto) {
         // Validate that this is not a directory
         if (requestDto.getIsDirectory()) {
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
@@ -120,7 +119,7 @@ public class FileService {
                 .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         // Update the file content in S3
-        s3FileService.createFileInS3(file, content);
+        s3FileService.createFileInS3(file, requestDto.getContent());
 
         return responseDto;
     }
