@@ -3,6 +3,8 @@ package fs16.webide.web_ide_for.container.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fs16.webide.web_ide_for.container.entity.Container;
@@ -17,4 +19,11 @@ public interface ContainerRepository extends JpaRepository<Container, Long> {
      * @return 사용자가 소유한 컨테이너 목록
      */
     List<Container> findAllByUserId(Long userId);
+
+    @Query("""
+            SELECT c.name
+            FROM Container c
+            WHERE c.id = :containerId
+            """)
+    String findNameById(@Param("containerId") Long containerId);
 }

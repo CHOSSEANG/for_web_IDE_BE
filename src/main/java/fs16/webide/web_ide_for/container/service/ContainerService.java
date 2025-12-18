@@ -6,6 +6,9 @@ import static fs16.webide.web_ide_for.common.error.CommonErrorCode.NOT_FOUND;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import fs16.webide.web_ide_for.container_member.entity.ContainerMember;
+import fs16.webide.web_ide_for.container_member.repository.ContainerMemberRepository;
+import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
 import org.springframework.stereotype.Service;
 
 import fs16.webide.web_ide_for.common.error.CoreException;
@@ -26,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 public class ContainerService {
 	private final ContainerRepository containerRepository;
 	private final UserRepository userRepository; // User 엔티티 조회를 위해 필요
+	private final ContainerMemberService containerMemberService; // 컨테이너 삭제 시 참여 멤버 삭제하기 위해 필요
+	private final ContainerMemberRepository containerMemberRepository; // 컨테이너 생성시 참여 멤버에 추가위해 필요
 
 	/**
 	 * 사용자 ID로 사용자를 조회합니다.
@@ -68,7 +73,13 @@ public class ContainerService {
 			.build();
 
 		// 3. Container 엔티티 저장
-		return containerRepository.save(newContainer);
+		Container saveContainer = containerRepository.save(newContainer);
+
+		// 4. 컨테이너 생성 시 컨테이너 멤버에 자동 저장
+		ContainerMember containerMember = new ContainerMember(saveContainer.getId(), user.getId());
+		containerMemberRepository.save(containerMember);
+
+		return saveContainer;
 	}
 
 	/**
@@ -115,6 +126,8 @@ public class ContainerService {
 		Container container = findContainerById(request.getContainerId());
 
 		// 3. 컨테이너 삭제
+		// 컨테이너에 속한 컨테이너 멤버들 삭제
+		containerMemberService.removeContainerMembers(container.getId());
 		containerRepository.delete(container);
 
 		// 4. 삭제된 컨테이너 정보 반환
