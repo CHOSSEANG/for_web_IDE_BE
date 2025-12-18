@@ -3,12 +3,16 @@ package fs16.webide.web_ide_for.file.controller;
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileTreeRequestDto;
+import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
 import fs16.webide.web_ide_for.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -46,5 +50,18 @@ public class FileController {
         FileCreateResponseDto responseDto = fileService.createFileWithContent(requestDto, content);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(responseDto));
+    }
+
+    /**
+     * Retrieves the file structure of a container
+     * @param containerId The ID of the container
+     * @return The file structure as a tree
+     */
+    @GetMapping("/tree")
+    public ResponseEntity<ApiResponse<List<FileTreeResponseDto>>> getFileTree(
+            @RequestParam Long containerId) {
+        log.info("Getting file tree for container: {}", containerId);
+        List<FileTreeResponseDto> fileStructure = fileService.getFileStructure(containerId);
+        return ResponseEntity.ok(ApiResponse.success(fileStructure));
     }
 }
