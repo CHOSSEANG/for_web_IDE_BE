@@ -2,6 +2,8 @@ package fs16.webide.web_ide_for.container.controller;
 
 import java.util.List;
 
+import fs16.webide.web_ide_for.container_member.dto.MemberInviteRequest;
+import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ContainerController {
 
     private final ContainerService containerService;
+    private final ContainerMemberService containerMemberService;
 
     /**
      * 새로운 컨테이너를 생성합니다.
@@ -118,5 +121,42 @@ public class ContainerController {
         ContainerUpdateRequest updateRequest = new ContainerUpdateRequest(userId, containerId, request.getName());
         Container container = containerService.updateContainer(updateRequest);
         return ApiResponse.success(ContainerUpdateResponse.from(container));
+    }
+
+
+    /**
+     * 선택한 유저(들)를 컨테이너에 초대합니다
+     *
+     * @param containerId 초대된 컨테이너의 ID
+     * @param request 컨테이너에 초대된 userIds
+     * @return "초대 완료"
+     */
+    @Operation(summary = "컨테이너 초대", description = "선택한 유저(들)를 컨테이너에 초대합니다")
+    @PostMapping("/{containerId}/invite")
+    public ApiResponse<String> inviteMember(
+            @PathVariable Long containerId,
+            @RequestBody MemberInviteRequest request) {
+        if (request.getUserIds().size() == 1) {
+            containerMemberService.inviteMember(containerId, request.getUserIds().get(0));
+        } else {
+            containerMemberService.invitedMembers(containerId, request.getUserIds());
+        }
+        return ApiResponse.success("초대 완료");
+    }
+
+    /**
+     * 해당 컨테이너에서 나갑니다
+     *
+     * @param containerId 나갈 컨테이너의 ID
+     * @param userId 컨테이너에서 나갈 user ID
+     * @return "컨테이너 나가기 완료"
+     */
+    @Operation(summary = "컨테이너 나가기", description = "해당 컨테이너에서 나갑니다")
+    @PostMapping("/{containerId}/leave")
+    public ApiResponse<String> leaveContainer(
+            @PathVariable Long containerId,
+            @RequestParam Long userId) {
+        containerMemberService.leaveContainer(containerId, userId);
+        return ApiResponse.success("컨테이너 나가기 완료");
     }
 }
