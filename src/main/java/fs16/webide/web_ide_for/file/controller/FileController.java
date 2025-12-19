@@ -3,6 +3,8 @@ package fs16.webide.web_ide_for.file.controller;
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
+import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
@@ -74,6 +76,18 @@ public class FileController {
     public ResponseEntity<FileUpdateResponseDto> updateFile(@RequestBody FileUpdateRequestDto requestDto) {
         // FileService에 구현할 updateFile 메서드를 호출합니다.
         FileUpdateResponseDto response = fileService.updateFile(requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 파일 또는 폴더를 다른 디렉토리로 이동합니다.
+     * @param requestDto 이동할 파일 ID와 목적지 부모 ID를 포함한 DTO
+     * @return 이동 완료 후 갱신된 파일 정보
+     */
+    @PatchMapping("/move")
+    public ResponseEntity<FileMoveResponse> moveFile(@RequestBody FileMoveRequest requestDto) {
+        // FileService에 구현할 moveFile 메서드를 호출합니다.
+        FileMoveResponse response = fileService.moveFile(requestDto);
         return ResponseEntity.ok(response);
     }
 }
