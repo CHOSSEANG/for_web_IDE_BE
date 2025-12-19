@@ -236,12 +236,20 @@ public class FileService {
     /**
      * 부모 디렉토리 정보와 새 이름을 조합하여 새로운 경로를 생성합니다.
      */
-    private String updatePath(File parent, String newName) {
+    private String updatePath(File parent, String name) {
+        // 1. 부모가 null이면 루트(/) 아래에 이름이 붙음
         if (parent == null) {
-            return "/" + newName;
+            return "/" + name;
         }
+
+        // 2. 부모는 있지만 부모의 path가 null인 경우를 대비 (데이터 무결성 방어)
         String parentPath = parent.getPath();
-        return parentPath.endsWith("/") ? parentPath + newName : parentPath + "/" + newName;
+        if (parentPath == null || parentPath.isEmpty()) {
+            parentPath = "/";
+        }
+
+        // 3. 부모 경로가 / 로 끝나면 이름만 붙이고, 아니면 / 를 넣어줌
+        return parentPath.endsWith("/") ? parentPath + name : parentPath + "/" + name;
     }
 
     /**
@@ -250,35 +258,34 @@ public class FileService {
     @Transactional
     public FileMoveResponse moveFile(FileMoveRequest request) {
 
-        // 1. fileId 자체가 null인지 먼저 확인
-        if (request.getFileId() == null) {
-            throw new CoreException(FileErrorCode.INVALID_FILE_PATH); // 혹은 적절한 에러 코드
-        }
-
-        // 1. 이동할 파일 존재 확인
+        // 1. 이동할 파일 조회
         File file = fileRepository.findById(request.getFileId())
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
-        // 2. 대상 부모 디렉토리 확인 (루트로 이동하는 경우 null일 수 있음)
-        File targetParent = null;
+        // 2. 대상 부모 디렉토리 결정
+        File targetParent = null; // 기본값 null (루트 의미)
 
+        // targetParentId가 있는 경우에만 DB에서 부모를 조회
         if (request.getTargetParentId() != null) {
             targetParent = fileRepository.findById(request.getTargetParentId())
                 .orElseThrow(() -> new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND));
 
+            // 폴더가 아닌 곳으로 이동 시도 시 예외
             if (!targetParent.getIsDirectory()) {
                 throw new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND);
             }
 
-            // 순환 참조 방지 (자기 자신이나 자신의 하위 폴더로 이동 불가)
+            // 순환 참조 방지
             if (isChildOf(targetParent, file)) {
                 throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
             }
         }
 
-        // 4. 경로 업데이트 및 이동 로직 실행...
-        String newPath = updatePath(targetParent, file.getName());
-        moveRecursive(file, targetParent, newPath);
+        // 3. 새로운 루트 경로 계산 (위에서 수정한 updatePath 사용)
+        String newRootPath = updatePath(targetParent, file.getName());
+
+        // 4. 재귀적으로 DB와 S3 경로 업데이트 실행
+        moveRecursive(file, targetParent, newRootPath);
 
         return FileMoveResponse.builder()
             .fileId(file.getId())
@@ -287,7 +294,7 @@ public class FileService {
             .newPath(file.getPath())
             .isDirectory(file.getIsDirectory())
             .updatedAt(file.getUpdatedAt())
-            .description("파일 이동이 완료되었습니다.")
+            .description("파일이 루트 또는 지정된 폴더로 성공적으로 이동되었습니다.")
             .build();
     }
 

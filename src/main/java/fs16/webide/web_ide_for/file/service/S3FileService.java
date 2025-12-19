@@ -232,9 +232,11 @@ public class S3FileService {
      */
     public void moveS3Object(String oldPath, String newPath, Long containerId) {
         try {
-            // S3 실제 키 생성 (컨테이너 ID 기반)
-            String oldS3Key = formatS3Key(containerId, oldPath);
-            String newS3Key = formatS3Key(containerId, newPath);
+            // 기존 formatS3Key 대신 일관된 키 생성 로직 사용
+            String oldS3Key = buildFullS3Key(containerId, oldPath);
+            String newS3Key = buildFullS3Key(containerId, newPath);
+
+            log.info("Moving S3 Object: [{}] -> [{}]", oldS3Key, newS3Key);
 
             // 1. 기존 객체를 새 위치로 복사
             amazonS3Client.copyObject(new CopyObjectRequest(bucket, oldS3Key, bucket, newS3Key));
@@ -247,6 +249,16 @@ public class S3FileService {
             log.error("Failed to move S3 object from {} to {}", oldPath, newPath, e);
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
+    }
+
+    private String buildFullS3Key(Long containerId, String path) {
+        if (path == null || path.isEmpty() || path.equals("/")) {
+            return containerId.toString() + "/";
+        }
+
+        // DB path가 "/"로 시작하면 제거하여 containerId/path 형태 유지
+        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+        return containerId + "/" + cleanPath;
     }
 
     /**
