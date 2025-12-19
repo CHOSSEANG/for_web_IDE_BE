@@ -189,4 +189,37 @@ public class S3FileService {
                 return "application/octet-stream";
         }
     }
+
+    /**
+     * S3에 있는 파일의 내용을 업데이트합니다.
+     */
+    public void updateFileContentInS3(File file, String content) {
+        createFileInS3(file, content); // 기존 createFileInS3 로직이 PutObject이므로 덮어쓰기가 됩니다.
+    }
+
+    /**
+     * S3에서 파일의 경로(이름)를 변경합니다.
+     * @param oldPath 이전 S3 키
+     * @param newFile 새 정보가 반영된 File 엔티티
+     */
+    public void renameFileInS3(String oldPath, File newFile) {
+        try {
+            String oldS3Key = newFile.getContainerId() + (oldPath.startsWith("/") ? oldPath : "/" + oldPath);
+            String newS3Key = generateS3Key(newFile);
+
+            if (newFile.getIsDirectory() && !newS3Key.endsWith("/")) {
+                newS3Key += "/";
+            }
+
+            // 1. 기존 객체를 새 키로 복사
+            amazonS3Client.copyObject(bucket, oldS3Key, bucket, newS3Key);
+            // 2. 기존 객체 삭제
+            amazonS3Client.deleteObject(bucket, oldS3Key);
+
+            log.info("S3 file renamed from {} to {}", oldS3Key, newS3Key);
+        } catch (Exception e) {
+            log.error("Error renaming file in S3", e);
+            throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+        }
+    }
 }

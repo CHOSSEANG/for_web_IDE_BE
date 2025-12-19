@@ -6,6 +6,8 @@ import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
+import fs16.webide.web_ide_for.file.dto.FileUpdateResponseDto;
 import fs16.webide.web_ide_for.file.entity.File;
 import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import fs16.webide.web_ide_for.file.repository.FileRepository;
@@ -180,5 +182,63 @@ public class FileService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public FileUpdateResponseDto updateFile(FileUpdateRequestDto requestDto) {
+        // 1. 파일 존재 확인
+        File file = fileRepository.findById(requestDto.getFileId())
+            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
+
+        String oldPath = file.getPath();
+        boolean isNameChanged = requestDto.getNewName() != null && !requestDto.getNewName().equals(file.getName());
+
+        // 2. 파일 이름 및 경로 수정
+        if (isNameChanged) {
+            file.setName(requestDto.getNewName());
+            // 부모 경로를 유지하면서 이름만 변경하여 새로운 path 생성
+            String newPath = updatePath(file.getParent(), requestDto.getNewName());
+            file.setPath(newPath);
+
+            // 확장자 추출 로직 (필요 시)
+            if (!file.getIsDirectory() && requestDto.getNewName().contains(".")) {
+                file.setExtension(requestDto.getNewName().substring(requestDto.getNewName().lastIndexOf(".") + 1));
+            }
+
+            // S3 이름 변경 적용
+            s3FileService.renameFileInS3(oldPath, file);
+        }
+
+        // 3. 파일 내용 수정 (디렉토리가 아닐 때만)
+        if (!file.getIsDirectory() && requestDto.getNewContent() != null) {
+            s3FileService.updateFileContentInS3(file, requestDto.getNewContent());
+        }
+
+        // DB 반영
+        File updatedFile = fileRepository.save(file);
+
+        return FileUpdateResponseDto.builder()
+            .fileId(updatedFile.getId())
+            .fileName(updatedFile.getName())
+            .parentId(updatedFile.getParent() != null ? updatedFile.getParent().getId() : null)
+            .isDirectory(updatedFile.getIsDirectory())
+            .filePath(updatedFile.getPath())
+            .createdAt(updatedFile.getCreatedAt())
+            .updatedAt(updatedFile.getUpdatedAt())
+            .fileExtension(updatedFile.getExtension())
+            .content(requestDto.getNewContent())
+            .description("파일 정보가 수정되었습니다.")
+            .build();
+    }
+
+    /**
+     * 부모 디렉토리 정보와 새 이름을 조합하여 새로운 경로를 생성합니다.
+     */
+    private String updatePath(File parent, String newName) {
+        if (parent == null) {
+            return "/" + newName;
+        }
+        String parentPath = parent.getPath();
+        return parentPath.endsWith("/") ? parentPath + newName : parentPath + "/" + newName;
     }
 }

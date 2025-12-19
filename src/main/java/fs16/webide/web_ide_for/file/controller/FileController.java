@@ -5,6 +5,8 @@ import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
 import fs16.webide.web_ide_for.file.dto.FileTreeRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
+import fs16.webide.web_ide_for.file.dto.FileUpdateResponseDto;
 import fs16.webide.web_ide_for.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,5 +63,17 @@ public class FileController {
         log.info("Getting file tree for container: {}", containerId);
         List<FileTreeResponseDto> fileStructure = fileService.getFileStructure(containerId);
         return ResponseEntity.ok(ApiResponse.success(fileStructure));
+    }
+
+    /**
+     * 파일 이름 또는 내용을 수정합니다.
+     * * @param requestDto 수정할 파일의 ID, 새 이름, 새 내용 등을 포함한 DTO
+     * @return 수정된 파일 정보와 결과 메시지
+     */
+    @PatchMapping("/update")
+    public ResponseEntity<FileUpdateResponseDto> updateFile(@RequestBody FileUpdateRequestDto requestDto) {
+        // FileService에 구현할 updateFile 메서드를 호출합니다.
+        FileUpdateResponseDto response = fileService.updateFile(requestDto);
+        return ResponseEntity.ok(response);
     }
 }
