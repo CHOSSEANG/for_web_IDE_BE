@@ -67,8 +67,6 @@ public class ContainerMemberService {
 
         Set<Long> users = new HashSet<>(containerMemberRepository.findUserIdsByContainerId(containerId));
 
-        String containerName = containerRepository.findNameById(containerId);
-
         containerMemberRepository.deleteByContainerId(containerId);
 
         List<Long> userIds = users.stream().toList();
