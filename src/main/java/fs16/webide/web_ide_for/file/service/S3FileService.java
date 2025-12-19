@@ -1,6 +1,7 @@
 package fs16.webide.web_ide_for.file.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import fs16.webide.web_ide_for.common.error.CoreException;
@@ -221,5 +222,43 @@ public class S3FileService {
             log.error("Error renaming file in S3", e);
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
+    }
+
+    /**
+     * S3 내에서 객체의 위치를 이동(복사 후 삭제)합니다.
+     * @param oldPath 이전 파일 경로 (DB의 path 필드 값)
+     * @param newPath 이동할 새 경로 (새로 계산된 path 값)
+     * @param containerId 컨테이너 ID (S3 키의 루트 폴더)
+     */
+    public void moveS3Object(String oldPath, String newPath, Long containerId) {
+        try {
+            // S3 실제 키 생성 (컨테이너 ID 기반)
+            String oldS3Key = formatS3Key(containerId, oldPath);
+            String newS3Key = formatS3Key(containerId, newPath);
+
+            // 1. 기존 객체를 새 위치로 복사
+            amazonS3Client.copyObject(new CopyObjectRequest(bucket, oldS3Key, bucket, newS3Key));
+
+            // 2. 복사가 완료된 후 기존 위치의 객체 삭제
+            amazonS3Client.deleteObject(bucket, oldS3Key);
+
+            log.info("S3 Object moved successfully: {} -> {}", oldS3Key, newS3Key);
+        } catch (Exception e) {
+            log.error("Failed to move S3 object from {} to {}", oldPath, newPath, e);
+            throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+        }
+    }
+
+    /**
+     * DB의 path 정보를 S3 Key 형식에 맞게 포맷팅합니다.
+     */
+    private String formatS3Key(Long containerId, String path) {
+        if (path == null || path.isEmpty()) {
+            return containerId.toString() + "/";
+        }
+
+        // 경로 시작의 '/' 제거 (generateS3Key 로직과 일관성 유지)
+        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+        return containerId + "/" + cleanPath;
     }
 }

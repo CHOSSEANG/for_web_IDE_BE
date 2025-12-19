@@ -5,6 +5,8 @@ import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
+import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
 import fs16.webide.web_ide_for.file.dto.FileUpdateResponseDto;
@@ -241,4 +243,85 @@ public class FileService {
         String parentPath = parent.getPath();
         return parentPath.endsWith("/") ? parentPath + newName : parentPath + "/" + newName;
     }
+
+    /**
+     * 파일 또는 폴더를 이동합니다.
+     */
+    @Transactional
+    public FileMoveResponse moveFile(FileMoveRequest request) {
+
+        // 1. fileId 자체가 null인지 먼저 확인
+        if (request.getFileId() == null) {
+            throw new CoreException(FileErrorCode.INVALID_FILE_PATH); // 혹은 적절한 에러 코드
+        }
+
+        // 1. 이동할 파일 존재 확인
+        File file = fileRepository.findById(request.getFileId())
+            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
+
+        // 2. 대상 부모 디렉토리 확인 (루트로 이동하는 경우 null일 수 있음)
+        File targetParent = null;
+
+        if (request.getTargetParentId() != null) {
+            targetParent = fileRepository.findById(request.getTargetParentId())
+                .orElseThrow(() -> new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND));
+
+            if (!targetParent.getIsDirectory()) {
+                throw new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND);
+            }
+
+            // 순환 참조 방지 (자기 자신이나 자신의 하위 폴더로 이동 불가)
+            if (isChildOf(targetParent, file)) {
+                throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+            }
+        }
+
+        // 4. 경로 업데이트 및 이동 로직 실행...
+        String newPath = updatePath(targetParent, file.getName());
+        moveRecursive(file, targetParent, newPath);
+
+        return FileMoveResponse.builder()
+            .fileId(file.getId())
+            .fileName(file.getName())
+            .newParentId(file.getParent() != null ? file.getParent().getId() : null)
+            .newPath(file.getPath())
+            .isDirectory(file.getIsDirectory())
+            .updatedAt(file.getUpdatedAt())
+            .description("파일 이동이 완료되었습니다.")
+            .build();
+    }
+
+    /**
+     * 파일 및 폴더를 재귀적으로 이동시키고 DB/S3 정보를 갱신합니다.
+     */
+    private void moveRecursive(File file, File newParent, String newPath) {
+        String oldPath = file.getPath();
+
+        // S3 이동 실행
+        s3FileService.moveS3Object(oldPath, newPath, file.getContainerId());
+
+        // DB 정보 업데이트
+        file.setParent(newParent);
+        file.setPath(newPath);
+        fileRepository.save(file);
+
+        // 폴더인 경우 하위 자식들도 이동
+        if (file.getIsDirectory()) {
+            List<File> children = fileRepository.findByParent(file);
+            for (File child : children) {
+                String childNewPath = newPath.endsWith("/") ? newPath + child.getName() : newPath + "/" + child.getName();
+                moveRecursive(child, file, childNewPath);
+            }
+        }
+    }
+
+    /**
+     * target이 potentialParent의 하위 폴더인지 확인 (순환 참조 체크)
+     */
+    private boolean isChildOf(File node, File potentialParent) {
+        if (node == null) return false;
+        if (node.getId().equals(potentialParent.getId())) return true;
+        return isChildOf(node.getParent(), potentialParent);
+    }
+
 }
