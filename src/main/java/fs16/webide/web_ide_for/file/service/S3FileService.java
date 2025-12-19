@@ -232,11 +232,16 @@ public class S3FileService {
      */
     public void moveS3Object(String oldPath, String newPath, Long containerId) {
         try {
-            // 기존 formatS3Key 대신 일관된 키 생성 로직 사용
-            String oldS3Key = buildFullS3Key(containerId, oldPath);
-            String newS3Key = buildFullS3Key(containerId, newPath);
 
-            log.info("Moving S3 Object: [{}] -> [{}]", oldS3Key, newS3Key);
+            String oldS3Key = formatS3Key(containerId, oldPath);
+            String newS3Key = formatS3Key(containerId, newPath);
+
+            log.info("S3 MOVE ATTEMPT: [Source: {}] -> [Target: {}]", oldS3Key, newS3Key);
+
+            if (!amazonS3Client.doesObjectExist(bucket, oldS3Key)) {
+                log.error("SOURCE KEY NOT FOUND IN S3: {}", oldS3Key);
+                throw new CoreException(FileErrorCode.FILE_NOT_FOUND); // 원본이 없으면 복사 중단
+            }
 
             // 1. 기존 객체를 새 위치로 복사
             amazonS3Client.copyObject(new CopyObjectRequest(bucket, oldS3Key, bucket, newS3Key));
@@ -265,12 +270,21 @@ public class S3FileService {
      * DB의 path 정보를 S3 Key 형식에 맞게 포맷팅합니다.
      */
     private String formatS3Key(Long containerId, String path) {
-        if (path == null || path.isEmpty()) {
-            return containerId.toString() + "/";
+        if (path == null || path.isEmpty() || path.equals("/")) {
+            return containerId + "/";
         }
 
-        // 경로 시작의 '/' 제거 (generateS3Key 로직과 일관성 유지)
-        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+        // 1. 앞뒤 공백 제거 및 중복 슬래시 방지
+        String cleanPath = path.trim();
+
+        // 2. 시작하는 "/" 제거 (containerId 뒤에 직접 붙이기 위함)
+        while (cleanPath.startsWith("/")) {
+            cleanPath = cleanPath.substring(1);
+        }
+
+        // 3. 만약 파일이 아니라 '폴더'라면 S3 관례상 마지막에 "/"가 있어야 함
+        // moveRecursive에서 넘겨주는 newPath가 폴더인지 파일인지 확인이 필요할 수 있음
+
         return containerId + "/" + cleanPath;
     }
 }
