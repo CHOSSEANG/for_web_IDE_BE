@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(
-        name = "container_name",
+        name = "container_member",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"container_id","user_id"})
         }
@@ -21,7 +21,7 @@ public class ContainerMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "userI_id", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
     @Column(name = "container_id", nullable = false)
     private Long containerId;
