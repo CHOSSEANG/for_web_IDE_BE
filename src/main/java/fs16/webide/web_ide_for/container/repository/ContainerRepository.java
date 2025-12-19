@@ -17,5 +17,4 @@ public interface ContainerRepository extends JpaRepository<Container, Long> {
      * @return 사용자가 소유한 컨테이너 목록
      */
     List<Container> findAllByUserId(Long userId);
-
 }
