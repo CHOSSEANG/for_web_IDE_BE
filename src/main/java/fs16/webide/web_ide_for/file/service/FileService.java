@@ -42,6 +42,7 @@ public class FileService {
      */
     @Transactional
     public FileCreateResponse createFile(FileCreateRequest requestDto) {
+
         // 1. 컨테이너 존재 검증
         Container container = containerRepository.findById(requestDto.getContainerId())
             .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
@@ -57,31 +58,44 @@ public class FileService {
             }
         }
 
-        // 3. 서버에서 정확한 전체 경로(Full Path) 생성
-        // parentId와 파일명을 사용하여 updatePath 메서드로 파일명까지 포함된 경로를 만듭니다.
-        String fullPath = updatePath(parentFile, requestDto.getName());
+        // 3. 이름(name)을 분석하여 isDirectory와 extension 결정 (추가된 로직)
+        String name = requestDto.getName();
+        // 점(.)이 포함되어 있으면 파일, 없으면 디렉토리로 간주
+        boolean isDirectory = !name.contains(".");
+        String extension = null;
 
-        // 4. 중복 파일 체크 (조립된 전체 경로로 확인)
+        if (!isDirectory) {
+            int lastDotIndex = name.lastIndexOf('.');
+            // .으로 시작하는 파일(예: .gitignore) 처리 및 일반 확장자 추출
+            if (lastDotIndex > 0) {
+                extension = name.substring(lastDotIndex + 1);
+            }
+        }
+
+        // 4. 서버에서 정확한 전체 경로(Full Path) 생성
+        String fullPath = updatePath(parentFile, name);
+
+        // 5. 중복 파일 체크
         Optional<File> existingFile = fileRepository.findByContainerIdAndPath(
             requestDto.getContainerId(), fullPath);
         if (existingFile.isPresent()) {
-            throw new CoreException(requestDto.getIsDirectory() ?
+            throw new CoreException(isDirectory ?
                 FileErrorCode.DIRECTORY_ALREADY_EXISTS : FileErrorCode.FILE_ALREADY_EXISTS);
         }
 
-        // 5. 엔티티 생성 및 정보 설정
+        // 6. 엔티티 생성 및 정보 설정
         File file = new File();
         file.setContainerId(requestDto.getContainerId());
-        file.setName(requestDto.getName());
-        file.setParent(parentFile); // 부모 관계 설정
-        file.setIsDirectory(requestDto.getIsDirectory());
-        file.setPath(fullPath); // 조립된 전체 경로 저장
-        file.setExtension(requestDto.getFileExtension());
+        file.setName(name);
+        file.setParent(parentFile);
+        file.setIsDirectory(isDirectory); // 자동 판별된 값 사용
+        file.setPath(fullPath);
+        file.setExtension(extension); // 자동 추출된 값 사용
 
-        // 6. DB 저장
+        // 7. DB 저장
         File savedFile = fileRepository.save(file);
 
-        // 7. S3 생성 (savedFile의 path가 "/folder/file.txt" 형태이므로 정확히 생성됨)
+        // 8. S3 생성
         s3FileService.createFileInS3(savedFile);
 
         return FileCreateResponse.builder()
@@ -94,30 +108,31 @@ public class FileService {
             .createdAt(savedFile.getCreatedAt())
             .updatedAt(savedFile.getUpdatedAt())
             .fileExtension(savedFile.getExtension())
-            .description("파일이 성공적으로 생성되었습니다.")
+            .description("파일/디렉토리가 성공적으로 생성되었습니다.")
             .build();
     }
 
     /**
-     * Creates a file with content
-     * @param requestDto The file creation request with content
-     * @return The created file response
+     * 내용을 포함하여 파일을 생성합니다.
      */
     @Transactional
     public FileCreateResponse createFileWithContent(FileCreateRequest requestDto) {
-        // 1. 디렉토리는 내용을 가질 수 없음
-        if (requestDto.getIsDirectory()) {
+        // 1. createFile을 호출하여 DB 저장 및 S3 기본 객체 생성을 수행합니다.
+        // 이 메서드 내부에서 이름(name)을 분석해 isDirectory 여부를 결정합니다.
+        FileCreateResponse responseDto = createFile(requestDto);
+
+        // 2. [수정된 부분] requestDto가 아니라,
+        // createFile의 결과물인 responseDto에서 isDirectory 여부를 확인해야 합니다.
+        if (responseDto.getIsDirectory()) {
+            // 이름 분석 결과 디렉토리인데 내용(content)을 넣으려고 시도한 경우 예외 발생
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
 
-        // 2. 파일 생성 (위에서 수정한 createFile 호출 - DB 및 S3 기본 생성 완료)
-        FileCreateResponse responseDto = createFile(requestDto);
-
-        // 3. 생성된 파일 엔티티 재조회
+        // 3. 생성된 파일 엔티티를 조회하여 S3에 실제 내용(Content)을 덮어쓰기 합니다.
         File file = fileRepository.findById(responseDto.getId())
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
-        // 4. S3에 실제 내용(Content)을 포함하여 덮어쓰기
+        // 4. S3에 전달받은 content를 포함하여 업로드합니다.
         s3FileService.createFileInS3(file, requestDto.getContent());
 
         return responseDto;

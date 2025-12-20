@@ -28,31 +28,28 @@ public class FileController {
     private final FileService fileService;
 
     /**
-     * Creates a file or directory
-     * @param requestDto The file creation request
-     * @return The created file response
+     * 파일 또는 디렉토리를 생성합니다.
+     * name에 '.'이 포함되어 있으면 파일로, 없으면 디렉토리로 판단합니다.
      */
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<FileCreateResponse>> createFile(
-            @RequestBody FileCreateRequest requestDto) {
-        log.info("Creating file: {}", requestDto);
+        @RequestBody FileCreateRequest requestDto) {
+        log.info("Creating file or directory with name: {}", requestDto.getName());
         FileCreateResponse responseDto = fileService.createFile(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(responseDto));
+            .body(ApiResponse.success(responseDto));
     }
 
     /**
-     * Creates a file with content
-     * @param requestDto The file creation request with content
-     * @return The created file response
+     * 내용을 포함하여 파일을 생성합니다.
      */
     @PostMapping("/content")
     public ResponseEntity<ApiResponse<FileCreateResponse>> createFileWithContent(
-            @RequestBody FileCreateRequest requestDto) {
-        log.info("Creating file with content: {}", requestDto);
+        @RequestBody FileCreateRequest requestDto) {
+        log.info("Creating file with content. Name: {}", requestDto.getName());
         FileCreateResponse responseDto = fileService.createFileWithContent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(responseDto));
+            .body(ApiResponse.success(responseDto));
     }
 
     /**

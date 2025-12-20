@@ -101,28 +101,28 @@ public class S3FileService {
      * @return The S3 key
      */
     private String generateS3Key(File file) {
-        // Use containerId as the root folder to separate files by container
         StringBuilder keyBuilder = new StringBuilder();
         keyBuilder.append(file.getContainerId()).append("/");
-        
-        // Append the file path if it exists
+
         if (file.getPath() != null && !file.getPath().isEmpty()) {
-            // Remove leading slash if present
             String path = file.getPath();
+            // 앞쪽 슬래시 제거
             if (path.startsWith("/")) {
                 path = path.substring(1);
             }
             keyBuilder.append(path);
-            
-            // Add trailing slash if it's a directory and doesn't already end with one
+
+            // 디렉토리이고 마지막에 슬래시가 없다면 추가 (S3 폴더 관례)
             if (file.getIsDirectory() && !path.endsWith("/")) {
                 keyBuilder.append("/");
             }
         } else {
-            // If no path, just use the file name
             keyBuilder.append(file.getName());
+            if (file.getIsDirectory()) {
+                keyBuilder.append("/");
+            }
         }
-        
+
         return keyBuilder.toString();
     }
 
