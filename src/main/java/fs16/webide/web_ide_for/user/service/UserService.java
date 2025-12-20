@@ -6,6 +6,7 @@ import fs16.webide.web_ide_for.container_member.entity.ContainerMember;
 import fs16.webide.web_ide_for.container_member.repository.ContainerMemberRepository;
 import fs16.webide.web_ide_for.user.dto.UserSearchResponse;
 import fs16.webide.web_ide_for.user.entity.User;
+import fs16.webide.web_ide_for.user.error.UserErrorCode;
 import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class UserService {
         if(optionalUser.isPresent()){
             User user = optionalUser.get();
             if(!"Y".equals(user.getStatus())){
-                throw new CoreException(CommonErrorCode.BAD_REQUEST, "탈퇴한 회원입니다.");
+                throw new CoreException(UserErrorCode.USER_NOT_FOUND);
             }
 
             log.info("기존 회원 로그인 : {}",clerkUserId);
@@ -46,7 +47,7 @@ public class UserService {
         // 이메일 인증된 회원만 DB 저장
         if (!isEmailVerified) {
             log.info("이메일 미인증 clerkId={}", clerkUserId);
-            throw new CoreException(CommonErrorCode.BAD_REQUEST, "이메일 미인증");
+            throw new CoreException(UserErrorCode.EMAIL_NOT_VERIFIED);
         }
 
         // 이름 / 이미지
