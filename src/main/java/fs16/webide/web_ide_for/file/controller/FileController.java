@@ -94,15 +94,20 @@ public class FileController {
 
     /**
      * 파일 또는 폴더를 삭제합니다.
-     * 폴더인 경우 하위의 모든 파일과 폴더가 함께 삭제됩니다.
-     * @param requestDto 삭제할 파일의 ID와 컨테이너 ID를 포함한 DTO
-     * @return 삭제된 파일 정보와 결과 메시지
+     * @param fileId 삭제할 파일의 ID (Path Variable)
+     * @param containerId 컨테이너 ID (Query Parameter)
+     * @return 삭제된 파일 정보
      */
-    @DeleteMapping("/remove")
+    @DeleteMapping("/remove/{fileId}")
     public ResponseEntity<ApiResponse<FileRemoveResponse>> removeFile(
-        @RequestBody FileRemoveRequest requestDto) {
-        log.info("Removing file/directory: {}", requestDto.getFileId());
-        FileRemoveResponse response = fileService.removeFile(requestDto);
+        @PathVariable("fileId") Long fileId,
+        @RequestParam("containerId") Long containerId) {
+
+        log.info("Removing file/directory. ID: {}, Container: {}", fileId, containerId);
+
+        // 서비스 메서드 호출 시 각각의 인자로 전달
+        FileRemoveResponse response = fileService.removeFile(fileId, containerId);
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

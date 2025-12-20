@@ -340,16 +340,18 @@ public class FileService {
     }
 
     /**
-     * 파일 또는 폴더를 삭제합니다. (하위 항목 포함)
+     * 파일 또는 폴더를 삭제합니다.
+     * @param fileId 삭제할 파일 ID
+     * @param containerId 권한 확인을 위한 컨테이너 ID
      */
     @Transactional
-    public FileRemoveResponse removeFile(FileRemoveRequest request) {
-        // 1. 삭제할 파일 존재 확인
-        File file = fileRepository.findById(request.getFileId())
+    public FileRemoveResponse removeFile(Long fileId, Long containerId) {
+        // 1. 삭제할 파일 조회
+        File file = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
-        // 2. 컨테이너 소유권 검증 (보안 강화)
-        if (!file.getContainerId().equals(request.getContainerId())) {
+        // 2. 컨테이너 소유권 검증
+        if (!file.getContainerId().equals(containerId)) {
             throw new CoreException(FileErrorCode.CONTAINER_NOT_FOUND);
         }
 
@@ -357,15 +359,13 @@ public class FileService {
         String deletedPath = file.getPath();
 
         // 3. 재귀적으로 S3 및 DB 삭제 실행
-        // Note: DB는 CascadeType.ALL 설정 덕분에 부모 삭제 시 자식도 삭제되지만,
-        // S3 객체는 직접 하나하나 지워줘야 합니다.
         deleteRecursive(file);
 
         return FileRemoveResponse.builder()
-            .fileId(request.getFileId())
+            .fileId(fileId)
             .fileName(deletedName)
             .filePath(deletedPath)
-            .description("파일 및 하위 항목이 모두 삭제되었습니다.")
+            .description("파일이 성공적으로 삭제되었습니다.")
             .build();
     }
 

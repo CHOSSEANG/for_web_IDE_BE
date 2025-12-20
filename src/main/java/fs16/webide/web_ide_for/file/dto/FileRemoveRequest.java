@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FileRemoveRequest {
-	private Long fileId;
 	private Long containerId; // 검증 및 S3 경로 확인용
 }
