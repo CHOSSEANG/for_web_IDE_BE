@@ -237,18 +237,26 @@ public class FileService {
      * 부모 디렉토리 정보와 새 이름을 조합하여 새로운 경로를 생성합니다.
      */
     private String updatePath(File parent, String name) {
-        // 1. 부모가 null이면 루트(/) 아래에 이름이 붙음
+        // 1. 부모가 아예 없으면 최상위(Root) 파일이므로 /이름
         if (parent == null) {
             return "/" + name;
         }
 
-        // 2. 부모는 있지만 부모의 path가 null인 경우를 대비 (데이터 무결성 방어)
+        // 2. 부모의 path 추출
         String parentPath = parent.getPath();
+
+        // 3. 부모의 path가 null인 경우 처리
         if (parentPath == null || parentPath.isEmpty()) {
-            parentPath = "/";
+            // 부모가 최상위(Root)에 있는 폴더인 경우, 경로는 /부모이름이 되어야 함
+            parentPath = "/" + parent.getName();
         }
 
-        // 3. 부모 경로가 / 로 끝나면 이름만 붙이고, 아니면 / 를 넣어줌
+        // 4. 경로 조립 (중복 슬래시 방지)
+        // parentPath가 "/"인 경우는 이미 3번에서 걸러지거나 root 폴더인 경우임
+        if (parentPath.equals("/")) {
+            return "/" + name;
+        }
+
         return parentPath.endsWith("/") ? parentPath + name : parentPath + "/" + name;
     }
 
@@ -302,17 +310,15 @@ public class FileService {
      * 파일 및 폴더를 재귀적으로 이동시키고 DB/S3 정보를 갱신합니다.
      */
     private void moveRecursive(File file, File newParent, String newPath) {
-        String oldPath = file.getPath();
-
-        // S3 이동 실행
-        s3FileService.moveS3Object(oldPath, newPath, file.getContainerId());
+        // 중요: S3 이동 시 이제 엔티티 객체를 직접 넘깁니다.
+        s3FileService.moveS3Object(file, newPath);
 
         // DB 정보 업데이트
         file.setParent(newParent);
         file.setPath(newPath);
         fileRepository.save(file);
 
-        // 폴더인 경우 하위 자식들도 이동
+        // 폴더인 경우 하위 자식들도 재귀적으로 이동
         if (file.getIsDirectory()) {
             List<File> children = fileRepository.findByParent(file);
             for (File child : children) {

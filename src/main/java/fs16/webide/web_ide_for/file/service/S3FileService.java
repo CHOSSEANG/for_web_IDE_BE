@@ -226,21 +226,23 @@ public class S3FileService {
 
     /**
      * S3 내에서 객체의 위치를 이동(복사 후 삭제)합니다.
-     * @param oldPath 이전 파일 경로 (DB의 path 필드 값)
+     * @param file 이동할 파일
      * @param newPath 이동할 새 경로 (새로 계산된 path 값)
-     * @param containerId 컨테이너 ID (S3 키의 루트 폴더)
      */
-    public void moveS3Object(String oldPath, String newPath, Long containerId) {
+    public void moveS3Object(File file, String newPath) {
+        // 이동 전의 원래 경로를 로그용으로 보관
+        String originalPath = file.getPath();
         try {
-
-            String oldS3Key = formatS3Key(containerId, oldPath);
-            String newS3Key = formatS3Key(containerId, newPath);
+            // 기존 파일 엔티티의 정보를 활용해 정확한 원본 S3 Key 생성
+            String oldS3Key = generateS3Key(file);
+            String newS3Key = formatS3Key(file.getContainerId(), newPath);
 
             log.info("S3 MOVE ATTEMPT: [Source: {}] -> [Target: {}]", oldS3Key, newS3Key);
 
+            // 원본 파일 존재 여부 확인 (NoSuchKey 방지)
             if (!amazonS3Client.doesObjectExist(bucket, oldS3Key)) {
                 log.error("SOURCE KEY NOT FOUND IN S3: {}", oldS3Key);
-                throw new CoreException(FileErrorCode.FILE_NOT_FOUND); // 원본이 없으면 복사 중단
+                throw new CoreException(FileErrorCode.FILE_NOT_FOUND);
             }
 
             // 1. 기존 객체를 새 위치로 복사
@@ -251,7 +253,8 @@ public class S3FileService {
 
             log.info("S3 Object moved successfully: {} -> {}", oldS3Key, newS3Key);
         } catch (Exception e) {
-            log.error("Failed to move S3 object from {} to {}", oldPath, newPath, e);
+            // oldPath 대신 originalPath 또는 file.getPath() 사용
+            log.error("Failed to move S3 object for file ID: {}, NewPath: {}", file.getId(), newPath, e);
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
     }
