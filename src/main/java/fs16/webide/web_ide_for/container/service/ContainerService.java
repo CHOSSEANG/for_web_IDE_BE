@@ -76,7 +76,7 @@ public class ContainerService {
 		Container saveContainer = containerRepository.save(newContainer);
 
 		// 4. 컨테이너 생성 시 컨테이너 멤버에 자동 저장
-		ContainerMember containerMember = new ContainerMember(user.getId(),saveContainer.getId());
+		ContainerMember containerMember = new ContainerMember(user,saveContainer);
 		containerMemberRepository.save(containerMember);
 
 		return saveContainer;

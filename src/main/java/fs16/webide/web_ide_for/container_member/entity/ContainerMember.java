@@ -1,5 +1,7 @@
 package fs16.webide.web_ide_for.container_member.entity;
 
+import fs16.webide.web_ide_for.container.entity.Container;
+import fs16.webide.web_ide_for.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,15 +23,18 @@ public class ContainerMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-    @Column(name = "container_id", nullable = false)
-    private Long containerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false) // FK 필수
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "container_id", nullable = false)
+    private Container container;
     @CreationTimestamp
     private LocalDateTime joined_at;
 
-    public ContainerMember(Long userId, Long containerId) {
-        this.userId = userId;
-        this.containerId = containerId;
+    public ContainerMember(User user, Container container) {
+        this.user = user;
+        this.container = container;
     }
 }
