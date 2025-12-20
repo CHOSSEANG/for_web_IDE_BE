@@ -4,6 +4,8 @@ import fs16.webide.web_ide_for.user.dto.UserSearchResponse;
 import fs16.webide.web_ide_for.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +39,53 @@ public class UserController {
     }
 
 
+
+    @Operation(summary = "프로필 변경", description = "이름, 프로필 이미지를 변경할 수 있습니다")
+    @PostMapping("/update")
+    public ResponseEntity<String> handleWebhook(@RequestBody Map<String,Object> payload){
+
+        String eventType = (String) payload.get("type");
+        Object dataObj = payload.get("data");
+        if (!(dataObj instanceof Map<?, ?>)) {
+            log.warn("Invalid data type in webhook payload");
+            return ResponseEntity.badRequest().body("invalid payload");
+        }
+
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
+
+        if (eventType == null || data == null) {
+            log.warn("Invalid webhook payload");
+            return ResponseEntity.badRequest().body("invalid payload");
+        }
+
+        // Clerk user id
+        String clerkUserId = (String) data.get("id");
+
+        switch (eventType) {
+            case "user.created":
+                userService.findOrCreateUser(clerkUserId,data);
+                break;
+
+            case "user.updated":
+                userService.updateUser(clerkUserId,data);
+                break;
+
+            case "user.deleted":
+                userService.deleteUser(clerkUserId);
+                break;
+
+            default:
+                log.info("Unhandled Clerk event: {}", eventType);
+        }
+
+        return ResponseEntity.ok("ok");
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class UserInfoResponse {
+        private String userName;
+        private String imageUrl;
+    }
 
 }
