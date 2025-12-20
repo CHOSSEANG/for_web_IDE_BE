@@ -58,7 +58,7 @@ public class FileService {
         }
 
         // 3. 서버에서 정확한 전체 경로(Full Path) 생성
-        // 클라이언트가 보낸 requestDto.getFilePath() 대신 updatePath를 사용해 파일명까지 포함된 경로를 만듭니다.
+        // parentId와 파일명을 사용하여 updatePath 메서드로 파일명까지 포함된 경로를 만듭니다.
         String fullPath = updatePath(parentFile, requestDto.getName());
 
         // 4. 중복 파일 체크 (조립된 전체 경로로 확인)

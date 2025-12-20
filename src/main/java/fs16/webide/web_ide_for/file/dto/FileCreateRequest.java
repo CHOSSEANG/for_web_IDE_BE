@@ -10,7 +10,6 @@ public class FileCreateRequest {
     private String name;
     private Long parentId;
     private Boolean isDirectory;
-    private String filePath;
     private String fileExtension;
     private String content;
 }
