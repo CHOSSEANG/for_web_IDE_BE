@@ -42,67 +42,60 @@ public class FileService {
      */
     @Transactional
     public FileCreateResponse createFile(FileCreateRequest requestDto) {
-        // Validate container exists
+        // 1. 컨테이너 존재 검증
         Container container = containerRepository.findById(requestDto.getContainerId())
-                .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
+            .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
 
-        // Validate parent directory exists if parentId is provided
+        // 2. 부모 디렉토리 정보 조회 및 검증
+        File parentFile = null;
         if (requestDto.getParentId() != null) {
-            Optional<File> parentDirectory = fileRepository.findById(requestDto.getParentId());
-            if (parentDirectory.isEmpty() || !parentDirectory.get().getIsDirectory()) {
+            parentFile = fileRepository.findById(requestDto.getParentId())
+                .orElseThrow(() -> new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND));
+
+            if (!parentFile.getIsDirectory()) {
                 throw new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND);
             }
         }
 
-        // Check if file already exists
-        String path = requestDto.getFilePath();
-        if (path != null && !path.isEmpty()) {
-            Optional<File> existingFile = fileRepository.findByContainerIdAndPath(
-                    requestDto.getContainerId(), path);
-            if (existingFile.isPresent()) {
-                if (requestDto.getIsDirectory()) {
-                    throw new CoreException(FileErrorCode.DIRECTORY_ALREADY_EXISTS);
-                } else {
-                    throw new CoreException(FileErrorCode.FILE_ALREADY_EXISTS);
-                }
-            }
+        // 3. 서버에서 정확한 전체 경로(Full Path) 생성
+        // 클라이언트가 보낸 requestDto.getFilePath() 대신 updatePath를 사용해 파일명까지 포함된 경로를 만듭니다.
+        String fullPath = updatePath(parentFile, requestDto.getName());
+
+        // 4. 중복 파일 체크 (조립된 전체 경로로 확인)
+        Optional<File> existingFile = fileRepository.findByContainerIdAndPath(
+            requestDto.getContainerId(), fullPath);
+        if (existingFile.isPresent()) {
+            throw new CoreException(requestDto.getIsDirectory() ?
+                FileErrorCode.DIRECTORY_ALREADY_EXISTS : FileErrorCode.FILE_ALREADY_EXISTS);
         }
 
-        // Create file entity
+        // 5. 엔티티 생성 및 정보 설정
         File file = new File();
         file.setContainerId(requestDto.getContainerId());
         file.setName(requestDto.getName());
-
-        // Set parent if parentId is provided
-        if (requestDto.getParentId() != null) {
-            File parentFile = fileRepository.findById(requestDto.getParentId())
-                    .orElseThrow(() -> new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND));
-            file.setParent(parentFile);
-        }
-
+        file.setParent(parentFile); // 부모 관계 설정
         file.setIsDirectory(requestDto.getIsDirectory());
-        file.setPath(requestDto.getFilePath());
+        file.setPath(fullPath); // 조립된 전체 경로 저장
         file.setExtension(requestDto.getFileExtension());
 
-        // Save file to database
+        // 6. DB 저장
         File savedFile = fileRepository.save(file);
 
-        // Create file in S3
+        // 7. S3 생성 (savedFile의 path가 "/folder/file.txt" 형태이므로 정확히 생성됨)
         s3FileService.createFileInS3(savedFile);
 
-        // Return response
         return FileCreateResponse.builder()
-                .id(savedFile.getId())
-                .containerId(savedFile.getContainerId())
-                .fileName(savedFile.getName())
-                .parentDirectoryId(savedFile.getParent() != null ? savedFile.getParent().getId() : null)
-                .isDirectory(savedFile.getIsDirectory())
-                .filePath(savedFile.getPath())
-                .createdAt(savedFile.getCreatedAt())
-                .updatedAt(savedFile.getUpdatedAt())
-                .fileExtension(savedFile.getExtension())
-                .description("파일이 생성되었습니다.")
-                .build();
+            .id(savedFile.getId())
+            .containerId(savedFile.getContainerId())
+            .fileName(savedFile.getName())
+            .parentDirectoryId(savedFile.getParent() != null ? savedFile.getParent().getId() : null)
+            .isDirectory(savedFile.getIsDirectory())
+            .filePath(savedFile.getPath())
+            .createdAt(savedFile.getCreatedAt())
+            .updatedAt(savedFile.getUpdatedAt())
+            .fileExtension(savedFile.getExtension())
+            .description("파일이 성공적으로 생성되었습니다.")
+            .build();
     }
 
     /**
@@ -112,19 +105,19 @@ public class FileService {
      */
     @Transactional
     public FileCreateResponse createFileWithContent(FileCreateRequest requestDto) {
-        // Validate that this is not a directory
+        // 1. 디렉토리는 내용을 가질 수 없음
         if (requestDto.getIsDirectory()) {
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
 
-        // Create the file
+        // 2. 파일 생성 (위에서 수정한 createFile 호출 - DB 및 S3 기본 생성 완료)
         FileCreateResponse responseDto = createFile(requestDto);
 
-        // Get the created file
+        // 3. 생성된 파일 엔티티 재조회
         File file = fileRepository.findById(responseDto.getId())
-                .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
+            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
-        // Update the file content in S3
+        // 4. S3에 실제 내용(Content)을 포함하여 덮어쓰기
         s3FileService.createFileInS3(file, requestDto.getContent());
 
         return responseDto;
