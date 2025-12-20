@@ -7,6 +7,8 @@ import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
+import fs16.webide.web_ide_for.file.dto.FileRemoveRequest;
+import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
 import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
@@ -335,6 +337,57 @@ public class FileService {
         if (node == null) return false;
         if (node.getId().equals(potentialParent.getId())) return true;
         return isChildOf(node.getParent(), potentialParent);
+    }
+
+    /**
+     * 파일 또는 폴더를 삭제합니다. (하위 항목 포함)
+     */
+    @Transactional
+    public FileRemoveResponse removeFile(FileRemoveRequest request) {
+        // 1. 삭제할 파일 존재 확인
+        File file = fileRepository.findById(request.getFileId())
+            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
+
+        // 2. 컨테이너 소유권 검증 (보안 강화)
+        if (!file.getContainerId().equals(request.getContainerId())) {
+            throw new CoreException(FileErrorCode.CONTAINER_NOT_FOUND);
+        }
+
+        String deletedName = file.getName();
+        String deletedPath = file.getPath();
+
+        // 3. 재귀적으로 S3 및 DB 삭제 실행
+        // Note: DB는 CascadeType.ALL 설정 덕분에 부모 삭제 시 자식도 삭제되지만,
+        // S3 객체는 직접 하나하나 지워줘야 합니다.
+        deleteRecursive(file);
+
+        return FileRemoveResponse.builder()
+            .fileId(request.getFileId())
+            .fileName(deletedName)
+            .filePath(deletedPath)
+            .description("파일 및 하위 항목이 모두 삭제되었습니다.")
+            .build();
+    }
+
+    /**
+     * 하위 항목들을 탐색하며 S3 객체를 먼저 지우고 DB 레코드를 삭제합니다.
+     */
+    private void deleteRecursive(File file) {
+        // 폴더인 경우 하위 자식들을 먼저 처리
+        if (file.getIsDirectory()) {
+            // findByParent를 사용하여 자식 목록 조회
+            List<File> children = fileRepository.findByParent(file);
+            for (File child : children) {
+                deleteRecursive(child);
+            }
+        }
+
+        // S3에서 삭제
+        s3FileService.deleteFileFromS3(file);
+
+        // DB에서 삭제 (부모부터 지우면 cascade에 의해 자식이 사라질 수 있으나,
+        // S3 삭제를 위해 자식부터 명시적으로 지우는 것이 안전함)
+        fileRepository.delete(file);
     }
 
 }

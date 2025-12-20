@@ -290,4 +290,24 @@ public class S3FileService {
 
         return containerId + "/" + cleanPath;
     }
+
+    /**
+     * S3에서 파일 또는 디렉토리 객체를 삭제합니다.
+     */
+    public void deleteFileFromS3(File file) {
+        try {
+            String s3Key = generateS3Key(file); // 기존에 작성된 key 생성 로직 활용
+
+            // 디렉토리인 경우 S3 관례상 끝에 /가 붙어야 함
+            if (file.getIsDirectory() && !s3Key.endsWith("/")) {
+                s3Key += "/";
+            }
+
+            amazonS3Client.deleteObject(bucket, s3Key);
+            log.info("S3 object deleted: {}", s3Key);
+        } catch (Exception e) {
+            log.error("Error deleting file from S3: {}", file.getPath(), e);
+            throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+        }
+    }
 }
