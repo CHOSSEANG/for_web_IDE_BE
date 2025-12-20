@@ -5,6 +5,8 @@ import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
+import fs16.webide.web_ide_for.file.dto.FileRemoveRequest;
+import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
 import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
@@ -88,5 +90,19 @@ public class FileController {
         // FileService에 구현할 moveFile 메서드를 호출합니다.
         FileMoveResponse response = fileService.moveFile(requestDto);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 파일 또는 폴더를 삭제합니다.
+     * 폴더인 경우 하위의 모든 파일과 폴더가 함께 삭제됩니다.
+     * @param requestDto 삭제할 파일의 ID와 컨테이너 ID를 포함한 DTO
+     * @return 삭제된 파일 정보와 결과 메시지
+     */
+    @DeleteMapping("/remove")
+    public ResponseEntity<ApiResponse<FileRemoveResponse>> removeFile(
+        @RequestBody FileRemoveRequest requestDto) {
+        log.info("Removing file/directory: {}", requestDto.getFileId());
+        FileRemoveResponse response = fileService.removeFile(requestDto);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
