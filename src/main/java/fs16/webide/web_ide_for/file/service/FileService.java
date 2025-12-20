@@ -58,15 +58,13 @@ public class FileService {
             }
         }
 
-        // 3. 이름(name)을 분석하여 isDirectory와 extension 결정 (추가된 로직)
+        // 3. 이름(name)을 분석하여 isDirectory와 extension 결정
         String name = requestDto.getName();
-        // 점(.)이 포함되어 있으면 파일, 없으면 디렉토리로 간주
         boolean isDirectory = !name.contains(".");
         String extension = null;
 
         if (!isDirectory) {
             int lastDotIndex = name.lastIndexOf('.');
-            // .으로 시작하는 파일(예: .gitignore) 처리 및 일반 확장자 추출
             if (lastDotIndex > 0) {
                 extension = name.substring(lastDotIndex + 1);
             }
@@ -88,15 +86,25 @@ public class FileService {
         file.setContainerId(requestDto.getContainerId());
         file.setName(name);
         file.setParent(parentFile);
-        file.setIsDirectory(isDirectory); // 자동 판별된 값 사용
+        file.setIsDirectory(isDirectory);
         file.setPath(fullPath);
-        file.setExtension(extension); // 자동 추출된 값 사용
+        file.setExtension(extension);
 
         // 7. DB 저장
         File savedFile = fileRepository.save(file);
 
-        // 8. S3 생성
-        s3FileService.createFileInS3(savedFile);
+        // 8. S3 생성 (통합 로직)
+        if (isDirectory) {
+            // 디렉토리인데 내용이 포함된 경우 예외 처리
+            if (requestDto.getContent() != null && !requestDto.getContent().isEmpty()) {
+                throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+            }
+            s3FileService.createDirectoryInS3(savedFile);
+        } else {
+            // 파일인 경우: 내용이 있으면 내용 포함, 없으면 빈 파일 생성
+            String content = (requestDto.getContent() != null) ? requestDto.getContent() : "";
+            s3FileService.createFileInS3(savedFile, content);
+        }
 
         return FileCreateResponse.builder()
             .id(savedFile.getId())
@@ -110,32 +118,6 @@ public class FileService {
             .fileExtension(savedFile.getExtension())
             .description("파일/디렉토리가 성공적으로 생성되었습니다.")
             .build();
-    }
-
-    /**
-     * 내용을 포함하여 파일을 생성합니다.
-     */
-    @Transactional
-    public FileCreateResponse createFileWithContent(FileCreateRequest requestDto) {
-        // 1. createFile을 호출하여 DB 저장 및 S3 기본 객체 생성을 수행합니다.
-        // 이 메서드 내부에서 이름(name)을 분석해 isDirectory 여부를 결정합니다.
-        FileCreateResponse responseDto = createFile(requestDto);
-
-        // 2. [수정된 부분] requestDto가 아니라,
-        // createFile의 결과물인 responseDto에서 isDirectory 여부를 확인해야 합니다.
-        if (responseDto.getIsDirectory()) {
-            // 이름 분석 결과 디렉토리인데 내용(content)을 넣으려고 시도한 경우 예외 발생
-            throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
-        }
-
-        // 3. 생성된 파일 엔티티를 조회하여 S3에 실제 내용(Content)을 덮어쓰기 합니다.
-        File file = fileRepository.findById(responseDto.getId())
-            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
-
-        // 4. S3에 전달받은 content를 포함하여 업로드합니다.
-        s3FileService.createFileInS3(file, requestDto.getContent());
-
-        return responseDto;
     }
 
     /**

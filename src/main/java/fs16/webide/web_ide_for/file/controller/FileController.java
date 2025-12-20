@@ -46,17 +46,6 @@ public class FileController {
     }
 
     /**
-     * 내용을 포함하여 파일을 생성합니다.
-     */
-    @PostMapping("/content")
-    public ApiResponse<FileCreateResponse> createFileWithContent(
-        @RequestBody FileCreateRequest requestDto) {
-        log.info("Creating file with content. Name: {}", requestDto.getName());
-        FileCreateResponse responseDto = fileService.createFileWithContent(requestDto);
-        return ApiResponse.success(responseDto);
-    }
-
-    /**
      * Retrieves the file structure of a container
      * @param containerId The ID of the container
      * @return The file structure as a tree
