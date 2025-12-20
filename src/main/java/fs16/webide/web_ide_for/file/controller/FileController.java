@@ -1,11 +1,22 @@
 package fs16.webide.web_ide_for.file.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
-import fs16.webide.web_ide_for.file.dto.FileRemoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
@@ -13,11 +24,6 @@ import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
 import fs16.webide.web_ide_for.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -32,24 +38,22 @@ public class FileController {
      * name에 '.'이 포함되어 있으면 파일로, 없으면 디렉토리로 판단합니다.
      */
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<FileCreateResponse>> createFile(
+    public ApiResponse<FileCreateResponse> createFile(
         @RequestBody FileCreateRequest requestDto) {
         log.info("Creating file or directory with name: {}", requestDto.getName());
         FileCreateResponse responseDto = fileService.createFile(requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success(responseDto));
+        return ApiResponse.success(responseDto);
     }
 
     /**
      * 내용을 포함하여 파일을 생성합니다.
      */
     @PostMapping("/content")
-    public ResponseEntity<ApiResponse<FileCreateResponse>> createFileWithContent(
+    public ApiResponse<FileCreateResponse> createFileWithContent(
         @RequestBody FileCreateRequest requestDto) {
         log.info("Creating file with content. Name: {}", requestDto.getName());
         FileCreateResponse responseDto = fileService.createFileWithContent(requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success(responseDto));
+        return ApiResponse.success(responseDto);
     }
 
     /**
@@ -58,11 +62,11 @@ public class FileController {
      * @return The file structure as a tree
      */
     @GetMapping("/tree")
-    public ResponseEntity<ApiResponse<List<FileTreeResponse>>> getFileTree(
+    public ApiResponse<List<FileTreeResponse>> getFileTree(
             @RequestParam Long containerId) {
         log.info("Getting file tree for container: {}", containerId);
         List<FileTreeResponse> fileStructure = fileService.getFileStructure(containerId);
-        return ResponseEntity.ok(ApiResponse.success(fileStructure));
+        return ApiResponse.success(fileStructure);
     }
 
     /**
@@ -71,10 +75,10 @@ public class FileController {
      * @return 수정된 파일 정보와 결과 메시지
      */
     @PatchMapping("/update")
-    public ResponseEntity<FileUpdateResponse> updateFile(@RequestBody FileUpdateRequest requestDto) {
+    public ApiResponse<FileUpdateResponse> updateFile(@RequestBody FileUpdateRequest requestDto) {
         // FileService에 구현할 updateFile 메서드를 호출합니다.
         FileUpdateResponse response = fileService.updateFile(requestDto);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
     /**
@@ -83,10 +87,10 @@ public class FileController {
      * @return 이동 완료 후 갱신된 파일 정보
      */
     @PatchMapping("/move")
-    public ResponseEntity<FileMoveResponse> moveFile(@RequestBody FileMoveRequest requestDto) {
+    public ApiResponse<FileMoveResponse> moveFile(@RequestBody FileMoveRequest requestDto) {
         // FileService에 구현할 moveFile 메서드를 호출합니다.
         FileMoveResponse response = fileService.moveFile(requestDto);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
     /**
@@ -96,7 +100,7 @@ public class FileController {
      * @return 삭제된 파일 정보
      */
     @DeleteMapping("/remove/{fileId}")
-    public ResponseEntity<ApiResponse<FileRemoveResponse>> removeFile(
+    public ApiResponse<FileRemoveResponse> removeFile(
         @PathVariable("fileId") Long fileId,
         @RequestParam("containerId") Long containerId) {
 
@@ -105,6 +109,6 @@ public class FileController {
         // 서비스 메서드 호출 시 각각의 인자로 전달
         FileRemoveResponse response = fileService.removeFile(fileId, containerId);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ApiResponse.success(response);
     }
 }
