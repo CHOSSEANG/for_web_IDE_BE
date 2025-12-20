@@ -5,7 +5,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileUpdateRequestDto {
+public class FileUpdateRequest {
     private Long fileId;
     private String newName;
     private String newContent;

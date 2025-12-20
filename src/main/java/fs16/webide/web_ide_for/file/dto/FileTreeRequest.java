@@ -10,6 +10,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class FileTreeRequestDto {
+public class FileTreeRequest {
     private Long containerId;
 }

@@ -1,14 +1,13 @@
 package fs16.webide.web_ide_for.file.controller;
 
 import fs16.webide.web_ide_for.common.ApiResponse;
-import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
-import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
+import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
-import fs16.webide.web_ide_for.file.dto.FileTreeRequestDto;
-import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
-import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
-import fs16.webide.web_ide_for.file.dto.FileUpdateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
+import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
+import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
 import fs16.webide.web_ide_for.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +31,10 @@ public class FileController {
      * @return The created file response
      */
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<FileCreateResponseDto>> createFile(
-            @RequestBody FileCreateRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<FileCreateResponse>> createFile(
+            @RequestBody FileCreateRequest requestDto) {
         log.info("Creating file: {}", requestDto);
-        FileCreateResponseDto responseDto = fileService.createFile(requestDto);
+        FileCreateResponse responseDto = fileService.createFile(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(responseDto));
     }
@@ -46,10 +45,10 @@ public class FileController {
      * @return The created file response
      */
     @PostMapping("/content")
-    public ResponseEntity<ApiResponse<FileCreateResponseDto>> createFileWithContent(
-            @RequestBody FileCreateRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<FileCreateResponse>> createFileWithContent(
+            @RequestBody FileCreateRequest requestDto) {
         log.info("Creating file with content: {}", requestDto);
-        FileCreateResponseDto responseDto = fileService.createFileWithContent(requestDto);
+        FileCreateResponse responseDto = fileService.createFileWithContent(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(responseDto));
     }
@@ -60,10 +59,10 @@ public class FileController {
      * @return The file structure as a tree
      */
     @GetMapping("/tree")
-    public ResponseEntity<ApiResponse<List<FileTreeResponseDto>>> getFileTree(
+    public ResponseEntity<ApiResponse<List<FileTreeResponse>>> getFileTree(
             @RequestParam Long containerId) {
         log.info("Getting file tree for container: {}", containerId);
-        List<FileTreeResponseDto> fileStructure = fileService.getFileStructure(containerId);
+        List<FileTreeResponse> fileStructure = fileService.getFileStructure(containerId);
         return ResponseEntity.ok(ApiResponse.success(fileStructure));
     }
 
@@ -73,9 +72,9 @@ public class FileController {
      * @return 수정된 파일 정보와 결과 메시지
      */
     @PatchMapping("/update")
-    public ResponseEntity<FileUpdateResponseDto> updateFile(@RequestBody FileUpdateRequestDto requestDto) {
+    public ResponseEntity<FileUpdateResponse> updateFile(@RequestBody FileUpdateRequest requestDto) {
         // FileService에 구현할 updateFile 메서드를 호출합니다.
-        FileUpdateResponseDto response = fileService.updateFile(requestDto);
+        FileUpdateResponse response = fileService.updateFile(requestDto);
         return ResponseEntity.ok(response);
     }
 

@@ -5,7 +5,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileCreateRequestDto {
+public class FileCreateRequest {
     private Long containerId;
     private String name;
     private Long parentId;

@@ -3,13 +3,13 @@ package fs16.webide.web_ide_for.file.service;
 import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
-import fs16.webide.web_ide_for.file.dto.FileCreateRequestDto;
-import fs16.webide.web_ide_for.file.dto.FileCreateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
+import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
-import fs16.webide.web_ide_for.file.dto.FileTreeResponseDto;
-import fs16.webide.web_ide_for.file.dto.FileUpdateRequestDto;
-import fs16.webide.web_ide_for.file.dto.FileUpdateResponseDto;
+import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
+import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
+import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
 import fs16.webide.web_ide_for.file.entity.File;
 import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import fs16.webide.web_ide_for.file.repository.FileRepository;
@@ -39,7 +39,7 @@ public class FileService {
      * @return The created file response
      */
     @Transactional
-    public FileCreateResponseDto createFile(FileCreateRequestDto requestDto) {
+    public FileCreateResponse createFile(FileCreateRequest requestDto) {
         // Validate container exists
         Container container = containerRepository.findById(requestDto.getContainerId())
                 .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
@@ -89,7 +89,7 @@ public class FileService {
         s3FileService.createFileInS3(savedFile);
 
         // Return response
-        return FileCreateResponseDto.builder()
+        return FileCreateResponse.builder()
                 .id(savedFile.getId())
                 .containerId(savedFile.getContainerId())
                 .fileName(savedFile.getName())
@@ -109,14 +109,14 @@ public class FileService {
      * @return The created file response
      */
     @Transactional
-    public FileCreateResponseDto createFileWithContent(FileCreateRequestDto requestDto) {
+    public FileCreateResponse createFileWithContent(FileCreateRequest requestDto) {
         // Validate that this is not a directory
         if (requestDto.getIsDirectory()) {
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
 
         // Create the file
-        FileCreateResponseDto responseDto = createFile(requestDto);
+        FileCreateResponse responseDto = createFile(requestDto);
 
         // Get the created file
         File file = fileRepository.findById(responseDto.getId())
@@ -134,7 +134,7 @@ public class FileService {
      * @return A list of file structure DTOs representing the root files/directories
      */
     @Transactional(readOnly = true)
-    public List<FileTreeResponseDto> getFileStructure(Long containerId) {
+    public List<FileTreeResponse> getFileStructure(Long containerId) {
         // Validate container exists
         containerRepository.findById(containerId)
                 .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
@@ -161,18 +161,18 @@ public class FileService {
      * @param filesByParentId Map of files grouped by parent ID
      * @return A list of file structure DTOs
      */
-    private List<FileTreeResponseDto> buildFileTree(List<File> files, Map<Long, List<File>> filesByParentId) {
+    private List<FileTreeResponse> buildFileTree(List<File> files, Map<Long, List<File>> filesByParentId) {
         return files.stream()
                 .map(file -> {
                     // Build children list if this is a directory
-                    List<FileTreeResponseDto> children = null;
+                    List<FileTreeResponse> children = null;
                     if (file.getIsDirectory()) {
                         List<File> childFiles = filesByParentId.getOrDefault(file.getId(), new ArrayList<>());
                         children = buildFileTree(childFiles, filesByParentId);
                     }
 
                     // Create DTO for this file
-                    return FileTreeResponseDto.builder()
+                    return FileTreeResponse.builder()
                             .id(file.getId())
                             .name(file.getName())
                             .path(file.getPath())
@@ -187,7 +187,7 @@ public class FileService {
     }
 
     @Transactional
-    public FileUpdateResponseDto updateFile(FileUpdateRequestDto requestDto) {
+    public FileUpdateResponse updateFile(FileUpdateRequest requestDto) {
         // 1. 파일 존재 확인
         File file = fileRepository.findById(requestDto.getFileId())
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
@@ -219,7 +219,7 @@ public class FileService {
         // DB 반영
         File updatedFile = fileRepository.save(file);
 
-        return FileUpdateResponseDto.builder()
+        return FileUpdateResponse.builder()
             .fileId(updatedFile.getId())
             .fileName(updatedFile.getName())
             .parentId(updatedFile.getParent() != null ? updatedFile.getParent().getId() : null)

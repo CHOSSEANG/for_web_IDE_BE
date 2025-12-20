@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class FileUpdateResponseDto {
+public class FileUpdateResponse {
     private Long fileId;
     private String fileName;
     private Long parentId;

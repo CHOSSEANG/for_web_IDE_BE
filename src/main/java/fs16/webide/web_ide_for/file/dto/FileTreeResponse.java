@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class FileTreeResponseDto {
+public class FileTreeResponse {
     private Long id;
     private String name;
     private String path;
@@ -21,5 +21,5 @@ public class FileTreeResponseDto {
     private String extension;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<FileTreeResponseDto> children; // Recursive structure for directories
+    private List<FileTreeResponse> children; // Recursive structure for directories
 }
