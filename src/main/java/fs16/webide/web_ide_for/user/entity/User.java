@@ -3,6 +3,7 @@ package fs16.webide.web_ide_for.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+@NoArgsConstructor
 @Entity
 @Getter
 @Setter
@@ -19,4 +20,7 @@ public class User {
     private String profileImageUrl;
     private String status = "Y";
 
+    public User(Long id) {
+        this.id = id;
+    }
 }
