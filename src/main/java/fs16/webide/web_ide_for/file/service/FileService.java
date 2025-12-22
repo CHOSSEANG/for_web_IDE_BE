@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.container.entity.Container;
+import fs16.webide.web_ide_for.container.error.ContainerErrorCode;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
@@ -46,7 +47,7 @@ public class FileService {
 
         // 1. 컨테이너 존재 검증
         Container container = containerRepository.findById(requestDto.getContainerId())
-            .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
+            .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
 
         // 2. 부모 디렉토리 정보 조회 및 검증
         File parentFile = null;
@@ -132,7 +133,7 @@ public class FileService {
     public List<FileTreeResponse> getFileStructure(Long containerId) {
         // Validate container exists
         containerRepository.findById(containerId)
-                .orElseThrow(() -> new CoreException(FileErrorCode.CONTAINER_NOT_FOUND));
+                .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
 
         // Get all files in the container
         List<File> allFiles = fileRepository.findByContainerId(containerId);
@@ -374,7 +375,7 @@ public class FileService {
 
         // 2. 컨테이너 소유권 검증
         if (!file.getContainerId().equals(containerId)) {
-            throw new CoreException(FileErrorCode.CONTAINER_NOT_FOUND);
+            throw new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND);
         }
 
         String deletedName = file.getName();
