@@ -15,7 +15,8 @@ public enum FileErrorCode implements ErrorCode {
     FILE_ALREADY_EXISTS("FILE-004", "File already exists.", LogLevel.WARN),
     DIRECTORY_ALREADY_EXISTS("FILE-005", "Directory already exists.", LogLevel.WARN),
     CONTAINER_NOT_FOUND("FILE-006", "Container not found.", LogLevel.INFO),
-    PERMISSION_DENIED("FILE-007", "Permission denied.", LogLevel.WARN);
+    PERMISSION_DENIED("FILE-007", "Permission denied.", LogLevel.WARN),
+    DIRECTORY_CANNOT_INCLUDE_CONTENT("FILE-008","폴더에는 내용을 추가할 수 없습니다.", LogLevel.WARN);
 
     private final String code;
     private final String message;

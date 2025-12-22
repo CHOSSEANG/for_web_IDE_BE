@@ -69,6 +69,8 @@ public class FileService {
             if (lastDotIndex > 0) {
                 extension = name.substring(lastDotIndex + 1);
             }
+        } else if(requestDto.getContent() != null && !requestDto.getContent().isEmpty()) {
+            throw new CoreException(FileErrorCode.DIRECTORY_CANNOT_INCLUDE_CONTENT);
         }
 
         // 4. 서버에서 정확한 전체 경로(Full Path) 생성
