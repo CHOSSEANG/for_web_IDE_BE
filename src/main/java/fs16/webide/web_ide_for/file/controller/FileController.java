@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
+import fs16.webide.web_ide_for.file.dto.FileLoadRequest;
+import fs16.webide.web_ide_for.file.dto.FileLoadResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
@@ -56,6 +58,21 @@ public class FileController {
         log.info("Getting file tree for container: {}", containerId);
         List<FileTreeResponse> fileStructure = fileService.getFileStructure(containerId);
         return ApiResponse.success(fileStructure);
+    }
+
+    /**
+     * 특정 파일의 상세 내용(S3에 저장된 실제 코드/텍스트)을 조회합니다.
+     * @param fileId 파일 ID
+     * @return 파일 정보와 S3에서 읽어온 content가 포함된 DTO
+     */
+    @GetMapping("/{fileId}/content")
+    public ApiResponse<FileLoadResponse> getFileContent(@PathVariable("fileId") Long fileId) {
+        log.info("Loading content for file ID: {}", fileId);
+
+        // FileService를 통해 DB 메타데이터와 S3의 실제 내용을 가져옵니다.
+        FileLoadResponse response = fileService.getFileContent(fileId);
+
+        return ApiResponse.success(response);
     }
 
     /**
