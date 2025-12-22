@@ -15,7 +15,7 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     @Query("""
             SELECT c
             FROM Chat c
-            JOIN FETCH c.sender s
+            LEFT JOIN FETCH c.sender s
             WHERE c.container.id = :containerId
               AND c.createdAt >= :oneWeekAgo
               AND (:lastCreatedAt IS NULL OR c.createdAt < :lastCreatedAt)
@@ -32,18 +32,14 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     @Query("""
             SELECT c
             FROM Chat c
-            JOIN FETCH c.sender
+            JOIN c.sender s
             WHERE c.container.id = :containerId
-              AND c.message LIKE %:keyword%
-              AND (:lastCreatedAt IS NULL OR c.createdAt < :lastCreatedAt)
+              AND (:keyword IS NULL OR c.message LIKE %:keyword%)
             ORDER BY c.createdAt DESC
         """)
-    List<Chat> searchChatPaging(
+    List<Chat> searchChat(
             @Param("containerId") Long containerId,
-            @Param("keyword") String keyword,
-            @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
-            Pageable pageable
+            @Param("keyword") String keyword
     );
-
 
 }

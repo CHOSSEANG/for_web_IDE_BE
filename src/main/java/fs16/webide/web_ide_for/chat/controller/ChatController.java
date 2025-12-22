@@ -2,7 +2,6 @@ package fs16.webide.web_ide_for.chat.controller;
 
 import fs16.webide.web_ide_for.chat.dto.ChatResponse;
 import fs16.webide.web_ide_for.chat.service.ChatService;
-import fs16.webide.web_ide_for.user.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final CurrentUserService currentUserService;
 
     @Operation(summary = "채팅 조회", description = "7일 기간의 채팅을 조회합니다")
     @GetMapping("/chat")
@@ -52,8 +50,7 @@ public class ChatController {
     @Operation(summary = "채팅 검색", description = "키워드로 검색한 채팅을 출력합니다")
     @GetMapping("/chat/search")
     public List<ChatResponse> searchChat(@RequestParam("containerId") Long containerId,
-                                         @RequestParam("keyword") String keyword,
-                                         @RequestParam(required = false) LocalDateTime lastCreatedAt){
-        return chatService.searchChat(containerId, keyword, lastCreatedAt);
+                                         @RequestParam("keyword") String keyword){
+        return chatService.searchChat(containerId, keyword);
     }
 }

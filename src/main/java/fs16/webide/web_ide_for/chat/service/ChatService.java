@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -61,12 +62,10 @@ public class ChatService {
 
 
     // 채팅 검색
-    public List<ChatResponse> searchChat(Long containerId, String keyword, LocalDateTime lastCreatedAt){
-        Pageable pageable = PageRequest.of(0,20);
+    @Transactional(readOnly = true)
+    public List<ChatResponse> searchChat(Long containerId, String keyword){
 
-        List<Chat> chats = chatRepository.searchChatPaging(
-                containerId, keyword, lastCreatedAt, pageable
-        );
+        List<Chat> chats = chatRepository.searchChat(containerId, keyword);
         Collections.reverse(chats);
         return chats.stream().map(chat -> new ChatResponse(
                 chat.getSender().getName(),

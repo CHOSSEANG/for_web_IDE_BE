@@ -1,6 +1,8 @@
 package fs16.webide.web_ide_for.clerk;
 
+import fs16.webide.web_ide_for.chat.error.ChatErrorCode;
 import fs16.webide.web_ide_for.clerk.service.ClerkJwtService;
+import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -38,7 +40,7 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        // 1 accessor 없으면 바로 통과
+        // accessor 없으면 바로 통과
         if (accessor == null) {
             return message;
         }
@@ -52,7 +54,7 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
 
         String authHeader = accessor.getFirstNativeHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("STOMP Authorization header missing");
+            throw new CoreException(ChatErrorCode.HEADER_NOT_FOUND);
         }
 
         String token = authHeader.substring(7);
