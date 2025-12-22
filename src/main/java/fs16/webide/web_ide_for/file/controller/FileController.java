@@ -115,7 +115,7 @@ public class FileController {
      * @return 삭제된 파일 정보
      */
     @Operation(summary = "파일/폴더 삭제", description = "특정 파일 또는 디렉토리를 삭제합니다.")
-    @DeleteMapping("/remove/{fileId}")
+    @DeleteMapping("/{fileId}/remove")
     public ApiResponse<FileRemoveResponse> removeFile(
         @Parameter(description = "삭제할 파일 ID", example = "10") @PathVariable("fileId") Long fileId,
         @Parameter(description = "소속 컨테이너 ID", example = "1") @RequestParam("containerId") Long containerId) {
