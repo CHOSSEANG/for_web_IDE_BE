@@ -70,7 +70,7 @@ public class FileController {
      * @param fileId 파일 ID
      * @return 파일 정보와 S3에서 읽어온 content가 포함된 DTO
      */
-    @Operation(summary = "파일 수정", description = "파일의 이름이나 본문 내용을 수정합니다.")
+    @Operation(summary = "파일 내용 조회", description = "파일의 내용을 불러옵니다.")
     @GetMapping("/{fileId}/content")
     public ApiResponse<FileLoadResponse> getFileContent(@PathVariable("fileId") Long fileId) {
         log.info("Loading content for file ID: {}", fileId);
