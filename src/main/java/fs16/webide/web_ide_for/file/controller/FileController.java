@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import fs16.webide.web_ide_for.common.ApiResponse;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
-import fs16.webide.web_ide_for.file.dto.FileLoadRequest;
 import fs16.webide.web_ide_for.file.dto.FileLoadResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;

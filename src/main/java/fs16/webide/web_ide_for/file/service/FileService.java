@@ -1,5 +1,14 @@
 package fs16.webide.web_ide_for.file.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
@@ -8,7 +17,6 @@ import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
 import fs16.webide.web_ide_for.file.dto.FileLoadResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
-import fs16.webide.web_ide_for.file.dto.FileRemoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
@@ -18,14 +26,6 @@ import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import fs16.webide.web_ide_for.file.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
