@@ -30,18 +30,6 @@ public class S3FileService {
     private String bucket;
 
     /**
-     * Creates a file or directory in S3 based on the File entity
-     * @param file The File entity
-     */
-    public void createFileInS3(File file) {
-        if (file.getIsDirectory()) {
-            createDirectoryInS3(file);
-        } else {
-            createFileInS3(file, "");
-        }
-    }
-
-    /**
      * Creates a file in S3 based on the File entity
      * @param file The File entity
      * @param content The content of the file
