@@ -5,6 +5,7 @@ import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.repository.ContainerRepository;
 import fs16.webide.web_ide_for.file.dto.FileCreateRequest;
 import fs16.webide.web_ide_for.file.dto.FileCreateResponse;
+import fs16.webide.web_ide_for.file.dto.FileLoadResponse;
 import fs16.webide.web_ide_for.file.dto.FileMoveRequest;
 import fs16.webide.web_ide_for.file.dto.FileMoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileRemoveRequest;
@@ -145,6 +146,35 @@ public class FileService {
 
         // Build the file tree starting from root files
         return buildFileTree(rootFiles, filesByParentId);
+    }
+
+    /**
+     * 특정 파일의 내용을 조회합니다.
+     */
+    @Transactional(readOnly = true)
+    public FileLoadResponse getFileContent(Long fileId) {
+        // 1. DB에서 파일 존재 확인
+        File file = fileRepository.findById(fileId)
+            .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
+
+        // 2. 디렉토리인지 확인 (디렉토리는 내용이 없음)
+        if (file.getIsDirectory()) {
+            throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
+        }
+
+        // 3. S3에서 실제 텍스트 내용 읽기
+        String content = s3FileService.getFileContentFromS3(file);
+
+        // 4. DTO 구성 및 반환
+        return FileLoadResponse.builder()
+            .fileId(file.getId())
+            .fileName(file.getName())
+            .filePath(file.getPath())
+            .content(content)
+            .extension(file.getExtension())
+            .updatedAt(file.getUpdatedAt())
+            .description("파일 내용을 성공적으로 불러왔습니다.")
+            .build();
     }
 
     /**

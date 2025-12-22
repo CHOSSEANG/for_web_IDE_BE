@@ -4,6 +4,9 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.util.IOUtils;
+
 import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.file.entity.File;
 import fs16.webide.web_ide_for.file.error.FileErrorCode;
@@ -124,6 +127,25 @@ public class S3FileService {
         }
 
         return keyBuilder.toString();
+    }
+
+    /**
+     * S3에서 파일의 내용을 읽어옵니다.
+     */
+    public String getFileContentFromS3(File file) {
+        try {
+            String s3Key = generateS3Key(file); // 기존 키 생성 로직 활용
+
+            // S3 객체 가져오기
+            S3Object s3Object = amazonS3Client.getObject(bucket, s3Key);
+
+            // InputStream을 String으로 변환 (UTF-8)
+
+            return IOUtils.toString(s3Object.getObjectContent());
+        } catch (Exception e) {
+            log.error("Error reading file content from S3: {}", file.getPath(), e);
+            throw new CoreException(FileErrorCode.FILE_NOT_FOUND); // 파일이 없거나 읽기 실패 시 예외
+        }
     }
 
     /**
