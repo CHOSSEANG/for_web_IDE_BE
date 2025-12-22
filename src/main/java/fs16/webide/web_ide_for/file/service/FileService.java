@@ -211,9 +211,9 @@ public class FileService {
     }
 
     @Transactional
-    public FileUpdateResponse updateFile(FileUpdateRequest requestDto) {
+    public FileUpdateResponse updateFile(Long fileId, FileUpdateRequest requestDto) {
         // 1. 파일 존재 확인
-        File file = fileRepository.findById(requestDto.getFileId())
+        File file = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         String oldPath = file.getPath();

@@ -87,10 +87,11 @@ public class FileController {
      * @return 수정된 파일 정보와 결과 메시지
      */
     @Operation(summary = "파일 수정", description = "파일의 이름이나 본문 내용을 수정합니다.")
-    @PatchMapping("/update")
-    public ApiResponse<FileUpdateResponse> updateFile(@RequestBody FileUpdateRequest requestDto) {
+    @PatchMapping("/{fileId}/update")
+    public ApiResponse<FileUpdateResponse> updateFile(@PathVariable("fileId") Long fileId
+        ,@RequestBody FileUpdateRequest requestDto) {
         // FileService에 구현할 updateFile 메서드를 호출합니다.
-        FileUpdateResponse response = fileService.updateFile(requestDto);
+        FileUpdateResponse response = fileService.updateFile(fileId,requestDto);
         return ApiResponse.success(response);
     }
 

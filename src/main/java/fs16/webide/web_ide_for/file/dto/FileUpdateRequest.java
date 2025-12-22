@@ -8,8 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "파일 이름 또는 내용 수정 요청")
 public class FileUpdateRequest {
-    @Schema(description = "수정할 파일 ID", example = "10")
-    private Long fileId;
 
     @Schema(description = "변경할 파일 이름 (변경하지 않을 경우 기존 이름 전달)", example = "updated_script.js")
     private String newName;
