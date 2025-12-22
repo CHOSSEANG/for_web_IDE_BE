@@ -1,5 +1,6 @@
 package fs16.webide.web_ide_for.file.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(description = "파일/폴더 이동 요청")
 public class FileMoveRequest {
-	private Long fileId;       // 이동할 파일/폴더의 ID
-	private Long targetParentId; // 이동될 대상 폴더의 ID (루트인 경우 null 가능)}
+	@Schema(description = "이동할 대상 ID", example = "15")
+	private Long fileId;
+
+	@Schema(description = "도착지 부모 폴더 ID (루트 이동 시 null 가능)", example = "2")
+	private Long targetParentId;
 }
