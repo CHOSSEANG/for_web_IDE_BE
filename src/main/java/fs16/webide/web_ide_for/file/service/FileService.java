@@ -288,10 +288,10 @@ public class FileService {
      * 파일 또는 폴더를 이동합니다.
      */
     @Transactional
-    public FileMoveResponse moveFile(FileMoveRequest request) {
+    public FileMoveResponse moveFile(Long fileId, FileMoveRequest request) {
 
         // 1. 이동할 파일 조회
-        File file = fileRepository.findById(request.getFileId())
+        File file = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         // 2. 대상 부모 디렉토리 결정

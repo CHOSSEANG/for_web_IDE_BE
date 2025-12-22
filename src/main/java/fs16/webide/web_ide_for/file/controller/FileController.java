@@ -97,14 +97,15 @@ public class FileController {
 
     /**
      * 파일 또는 폴더를 다른 디렉토리로 이동합니다.
-     * @param requestDto 이동할 파일 ID와 목적지 부모 ID를 포함한 DTO
+     * @param fileId 이동할 파일 ID
+     * @param requestDto 목적지 부모 ID를 포함한 DTO
      * @return 이동 완료 후 갱신된 파일 정보
      */
     @Operation(summary = "파일/폴더 이동", description = "파일이나 디렉토리를 지정된 부모 디렉토리 하위로 이동시킵니다.")
-    @PatchMapping("/move")
-    public ApiResponse<FileMoveResponse> moveFile(@RequestBody FileMoveRequest requestDto) {
+    @PatchMapping("/{fileId}/move")
+    public ApiResponse<FileMoveResponse> moveFile(@PathVariable Long fileId, @RequestBody FileMoveRequest requestDto) {
         // FileService에 구현할 moveFile 메서드를 호출합니다.
-        FileMoveResponse response = fileService.moveFile(requestDto);
+        FileMoveResponse response = fileService.moveFile(fileId, requestDto);
         return ApiResponse.success(response);
     }
 
