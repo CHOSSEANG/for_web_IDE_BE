@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -29,6 +30,10 @@ public class SecurityConfig {
                     return corsConfig;
                 }))
                 .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .sessionManagement(session -> session
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
 
                 .authorizeHttpRequests(auth -> auth
