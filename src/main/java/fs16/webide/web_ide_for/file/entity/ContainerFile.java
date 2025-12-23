@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = "files")
-public class File {
+public class ContainerFile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +24,10 @@ public class File {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id") // DB 컬럼명
-    private File parent; // 부모 파일(폴더) 객체 직접 참조
+    private ContainerFile parent; // 부모 파일(폴더) 객체 직접 참조
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<File> children = new ArrayList<>(); // 하위 파일들 목록
+    private List<ContainerFile> children = new ArrayList<>(); // 하위 파일들 목록
     
     @Column(name = "is_directory")
     private Boolean isDirectory;

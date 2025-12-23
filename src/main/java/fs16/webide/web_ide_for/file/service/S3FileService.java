@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.util.IOUtils;
 
 import fs16.webide.web_ide_for.common.error.CoreException;
-import fs16.webide.web_ide_for.file.entity.File;
+import fs16.webide.web_ide_for.file.entity.ContainerFile;
 import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +31,12 @@ public class S3FileService {
 
     /**
      * Creates a file in S3 based on the File entity
-     * @param file The File entity
+     * @param containerFile The File entity
      * @param content The content of the file
      */
-    public void createFileInS3(File file, String content) {
+    public void createFileInS3(ContainerFile containerFile, String content) {
         try {
-            String s3Key = generateS3Key(file);
+            String s3Key = generateS3Key(containerFile);
             
             // Create metadata
             ObjectMetadata metadata = new ObjectMetadata();
@@ -44,7 +44,7 @@ public class S3FileService {
             metadata.setContentLength(contentBytes.length);
             
             // Set content type based on file extension
-            String contentType = determineContentType(file.getName());
+            String contentType = determineContentType(containerFile.getName());
             metadata.setContentType(contentType);
             
             // Upload file to S3
@@ -60,11 +60,11 @@ public class S3FileService {
 
     /**
      * Creates a directory in S3 based on the File entity
-     * @param file The File entity
+     * @param containerFile The File entity
      */
-    public void createDirectoryInS3(File file) {
+    public void createDirectoryInS3(ContainerFile containerFile) {
         try {
-            String s3Key = generateS3Key(file);
+            String s3Key = generateS3Key(containerFile);
             
             // Ensure the key ends with a slash to represent a directory
             if (!s3Key.endsWith("/")) {
@@ -88,15 +88,15 @@ public class S3FileService {
 
     /**
      * Generates an S3 key based on the File entity
-     * @param file The File entity
+     * @param containerFile The File entity
      * @return The S3 key
      */
-    private String generateS3Key(File file) {
+    private String generateS3Key(ContainerFile containerFile) {
         StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(file.getContainerId()).append("/");
+        keyBuilder.append(containerFile.getContainerId()).append("/");
 
-        if (file.getPath() != null && !file.getPath().isEmpty()) {
-            String path = file.getPath();
+        if (containerFile.getPath() != null && !containerFile.getPath().isEmpty()) {
+            String path = containerFile.getPath();
             // 앞쪽 슬래시 제거
             if (path.startsWith("/")) {
                 path = path.substring(1);
@@ -104,12 +104,12 @@ public class S3FileService {
             keyBuilder.append(path);
 
             // 디렉토리이고 마지막에 슬래시가 없다면 추가 (S3 폴더 관례)
-            if (file.getIsDirectory() && !path.endsWith("/")) {
+            if (containerFile.getIsDirectory() && !path.endsWith("/")) {
                 keyBuilder.append("/");
             }
         } else {
-            keyBuilder.append(file.getName());
-            if (file.getIsDirectory()) {
+            keyBuilder.append(containerFile.getName());
+            if (containerFile.getIsDirectory()) {
                 keyBuilder.append("/");
             }
         }
@@ -120,9 +120,9 @@ public class S3FileService {
     /**
      * S3에서 파일의 내용을 읽어옵니다.
      */
-    public String getFileContentFromS3(File file) {
+    public String getFileContentFromS3(ContainerFile containerFile) {
         try {
-            String s3Key = generateS3Key(file); // 기존 키 생성 로직 활용
+            String s3Key = generateS3Key(containerFile); // 기존 키 생성 로직 활용
 
             // S3 객체 가져오기
             S3Object s3Object = amazonS3Client.getObject(bucket, s3Key);
@@ -131,7 +131,7 @@ public class S3FileService {
 
             return IOUtils.toString(s3Object.getObjectContent());
         } catch (Exception e) {
-            log.error("Error reading file content from S3: {}", file.getPath(), e);
+            log.error("Error reading file content from S3: {}", containerFile.getPath(), e);
             throw new CoreException(FileErrorCode.FILE_NOT_FOUND); // 파일이 없거나 읽기 실패 시 예외
         }
     }
@@ -204,21 +204,21 @@ public class S3FileService {
     /**
      * S3에 있는 파일의 내용을 업데이트합니다.
      */
-    public void updateFileContentInS3(File file, String content) {
-        createFileInS3(file, content); // 기존 createFileInS3 로직이 PutObject이므로 덮어쓰기가 됩니다.
+    public void updateFileContentInS3(ContainerFile containerFile, String content) {
+        createFileInS3(containerFile, content); // 기존 createFileInS3 로직이 PutObject이므로 덮어쓰기가 됩니다.
     }
 
     /**
      * S3에서 파일의 경로(이름)를 변경합니다.
      * @param oldPath 이전 S3 키
-     * @param newFile 새 정보가 반영된 File 엔티티
+     * @param newContainerFile 새 정보가 반영된 File 엔티티
      */
-    public void renameFileInS3(String oldPath, File newFile) {
+    public void renameFileInS3(String oldPath, ContainerFile newContainerFile) {
         try {
-            String oldS3Key = newFile.getContainerId() + (oldPath.startsWith("/") ? oldPath : "/" + oldPath);
-            String newS3Key = generateS3Key(newFile);
+            String oldS3Key = newContainerFile.getContainerId() + (oldPath.startsWith("/") ? oldPath : "/" + oldPath);
+            String newS3Key = generateS3Key(newContainerFile);
 
-            if (newFile.getIsDirectory() && !newS3Key.endsWith("/")) {
+            if (newContainerFile.getIsDirectory() && !newS3Key.endsWith("/")) {
                 newS3Key += "/";
             }
 
@@ -236,16 +236,16 @@ public class S3FileService {
 
     /**
      * S3 내에서 객체의 위치를 이동(복사 후 삭제)합니다.
-     * @param file 이동할 파일
+     * @param containerFile 이동할 파일
      * @param newPath 이동할 새 경로 (새로 계산된 path 값)
      */
-    public void moveS3Object(File file, String newPath) {
+    public void moveS3Object(ContainerFile containerFile, String newPath) {
         // 이동 전의 원래 경로를 로그용으로 보관
-        String originalPath = file.getPath();
+        String originalPath = containerFile.getPath();
         try {
             // 기존 파일 엔티티의 정보를 활용해 정확한 원본 S3 Key 생성
-            String oldS3Key = generateS3Key(file);
-            String newS3Key = formatS3Key(file.getContainerId(), newPath);
+            String oldS3Key = generateS3Key(containerFile);
+            String newS3Key = formatS3Key(containerFile.getContainerId(), newPath);
 
             log.info("S3 MOVE ATTEMPT: [Source: {}] -> [Target: {}]", oldS3Key, newS3Key);
 
@@ -264,7 +264,7 @@ public class S3FileService {
             log.info("S3 Object moved successfully: {} -> {}", oldS3Key, newS3Key);
         } catch (Exception e) {
             // oldPath 대신 originalPath 또는 file.getPath() 사용
-            log.error("Failed to move S3 object for file ID: {}, NewPath: {}", file.getId(), newPath, e);
+            log.error("Failed to move S3 object for file ID: {}, NewPath: {}", containerFile.getId(), newPath, e);
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
     }
@@ -304,19 +304,19 @@ public class S3FileService {
     /**
      * S3에서 파일 또는 디렉토리 객체를 삭제합니다.
      */
-    public void deleteFileFromS3(File file) {
+    public void deleteFileFromS3(ContainerFile containerFile) {
         try {
-            String s3Key = generateS3Key(file); // 기존에 작성된 key 생성 로직 활용
+            String s3Key = generateS3Key(containerFile); // 기존에 작성된 key 생성 로직 활용
 
             // 디렉토리인 경우 S3 관례상 끝에 /가 붙어야 함
-            if (file.getIsDirectory() && !s3Key.endsWith("/")) {
+            if (containerFile.getIsDirectory() && !s3Key.endsWith("/")) {
                 s3Key += "/";
             }
 
             amazonS3Client.deleteObject(bucket, s3Key);
             log.info("S3 object deleted: {}", s3Key);
         } catch (Exception e) {
-            log.error("Error deleting file from S3: {}", file.getPath(), e);
+            log.error("Error deleting file from S3: {}", containerFile.getPath(), e);
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
     }

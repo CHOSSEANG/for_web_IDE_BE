@@ -22,7 +22,7 @@ import fs16.webide.web_ide_for.file.dto.FileRemoveResponse;
 import fs16.webide.web_ide_for.file.dto.FileTreeResponse;
 import fs16.webide.web_ide_for.file.dto.FileUpdateRequest;
 import fs16.webide.web_ide_for.file.dto.FileUpdateResponse;
-import fs16.webide.web_ide_for.file.entity.File;
+import fs16.webide.web_ide_for.file.entity.ContainerFile;
 import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import fs16.webide.web_ide_for.file.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
@@ -50,12 +50,12 @@ public class FileService {
             .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
 
         // 2. 부모 디렉토리 정보 조회 및 검증
-        File parentFile = null;
+        ContainerFile parentContainerFile = null;
         if (requestDto.getParentId() != null) {
-            parentFile = fileRepository.findById(requestDto.getParentId())
+            parentContainerFile = fileRepository.findById(requestDto.getParentId())
                 .orElseThrow(() -> new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND));
 
-            if (!parentFile.getIsDirectory()) {
+            if (!parentContainerFile.getIsDirectory()) {
                 throw new CoreException(FileErrorCode.DIRECTORY_NOT_FOUND);
             }
         }
@@ -75,10 +75,10 @@ public class FileService {
         }
 
         // 4. 서버에서 정확한 전체 경로(Full Path) 생성
-        String fullPath = updatePath(parentFile, name);
+        String fullPath = updatePath(parentContainerFile, name);
 
         // 5. 중복 파일 체크
-        Optional<File> existingFile = fileRepository.findByContainerIdAndPath(
+        Optional<ContainerFile> existingFile = fileRepository.findByContainerIdAndPath(
             requestDto.getContainerId(), fullPath);
         if (existingFile.isPresent()) {
             throw new CoreException(isDirectory ?
@@ -86,16 +86,16 @@ public class FileService {
         }
 
         // 6. 엔티티 생성 및 정보 설정
-        File file = new File();
-        file.setContainerId(requestDto.getContainerId());
-        file.setName(name);
-        file.setParent(parentFile);
-        file.setIsDirectory(isDirectory);
-        file.setPath(fullPath);
-        file.setExtension(extension);
+        ContainerFile containerFile = new ContainerFile();
+        containerFile.setContainerId(requestDto.getContainerId());
+        containerFile.setName(name);
+        containerFile.setParent(parentContainerFile);
+        containerFile.setIsDirectory(isDirectory);
+        containerFile.setPath(fullPath);
+        containerFile.setExtension(extension);
 
         // 7. DB 저장
-        File savedFile = fileRepository.save(file);
+        ContainerFile savedContainerFile = fileRepository.save(containerFile);
 
         // 8. S3 생성 (통합 로직)
         if (isDirectory) {
@@ -103,23 +103,23 @@ public class FileService {
             if (requestDto.getContent() != null && !requestDto.getContent().isEmpty()) {
                 throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
             }
-            s3FileService.createDirectoryInS3(savedFile);
+            s3FileService.createDirectoryInS3(savedContainerFile);
         } else {
             // 파일인 경우: 내용이 있으면 내용 포함, 없으면 빈 파일 생성
             String content = (requestDto.getContent() != null) ? requestDto.getContent() : "";
-            s3FileService.createFileInS3(savedFile, content);
+            s3FileService.createFileInS3(savedContainerFile, content);
         }
 
         return FileCreateResponse.builder()
-            .id(savedFile.getId())
-            .containerId(savedFile.getContainerId())
-            .fileName(savedFile.getName())
-            .parentDirectoryId(savedFile.getParent() != null ? savedFile.getParent().getId() : null)
-            .isDirectory(savedFile.getIsDirectory())
-            .filePath(savedFile.getPath())
-            .createdAt(savedFile.getCreatedAt())
-            .updatedAt(savedFile.getUpdatedAt())
-            .fileExtension(savedFile.getExtension())
+            .id(savedContainerFile.getId())
+            .containerId(savedContainerFile.getContainerId())
+            .fileName(savedContainerFile.getName())
+            .parentDirectoryId(savedContainerFile.getParent() != null ? savedContainerFile.getParent().getId() : null)
+            .isDirectory(savedContainerFile.getIsDirectory())
+            .filePath(savedContainerFile.getPath())
+            .createdAt(savedContainerFile.getCreatedAt())
+            .updatedAt(savedContainerFile.getUpdatedAt())
+            .fileExtension(savedContainerFile.getExtension())
             .description("파일/디렉토리가 성공적으로 생성되었습니다.")
             .build();
     }
@@ -136,19 +136,19 @@ public class FileService {
                 .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
 
         // Get all files in the container
-        List<File> allFiles = fileRepository.findByContainerId(containerId);
+        List<ContainerFile> allContainerFiles = fileRepository.findByContainerId(containerId);
 
         // Group files by parent ID
-        Map<Long, List<File>> filesByParentId = allFiles.stream()
+        Map<Long, List<ContainerFile>> filesByParentId = allContainerFiles.stream()
                 .collect(Collectors.groupingBy(
-                        file -> file.getParent() != null ? file.getParent().getId() : 0L
+                        containerFile -> containerFile.getParent() != null ? containerFile.getParent().getId() : 0L
                 ));
 
         // Get root files (files with no parent or parent outside this container)
-        List<File> rootFiles = filesByParentId.getOrDefault(0L, new ArrayList<>());
+        List<ContainerFile> rootContainerFiles = filesByParentId.getOrDefault(0L, new ArrayList<>());
 
         // Build the file tree starting from root files
-        return buildFileTree(rootFiles, filesByParentId);
+        return buildFileTree(rootContainerFiles, filesByParentId);
     }
 
     /**
@@ -157,54 +157,54 @@ public class FileService {
     @Transactional(readOnly = true)
     public FileLoadResponse getFileContent(Long fileId) {
         // 1. DB에서 파일 존재 확인
-        File file = fileRepository.findById(fileId)
+        ContainerFile containerFile = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         // 2. 디렉토리인지 확인 (디렉토리는 내용이 없음)
-        if (file.getIsDirectory()) {
+        if (containerFile.getIsDirectory()) {
             throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
         }
 
         // 3. S3에서 실제 텍스트 내용 읽기
-        String content = s3FileService.getFileContentFromS3(file);
+        String content = s3FileService.getFileContentFromS3(containerFile);
 
         // 4. DTO 구성 및 반환
         return FileLoadResponse.builder()
-            .fileId(file.getId())
-            .fileName(file.getName())
-            .filePath(file.getPath())
+            .fileId(containerFile.getId())
+            .fileName(containerFile.getName())
+            .filePath(containerFile.getPath())
             .content(content)
-            .extension(file.getExtension())
-            .updatedAt(file.getUpdatedAt())
+            .extension(containerFile.getExtension())
+            .updatedAt(containerFile.getUpdatedAt())
             .description("파일 내용을 성공적으로 불러왔습니다.")
             .build();
     }
 
     /**
      * Recursively builds a file tree structure
-     * @param files The files at the current level
+     * @param containerFiles The files at the current level
      * @param filesByParentId Map of files grouped by parent ID
      * @return A list of file structure DTOs
      */
-    private List<FileTreeResponse> buildFileTree(List<File> files, Map<Long, List<File>> filesByParentId) {
-        return files.stream()
-                .map(file -> {
+    private List<FileTreeResponse> buildFileTree(List<ContainerFile> containerFiles, Map<Long, List<ContainerFile>> filesByParentId) {
+        return containerFiles.stream()
+                .map(containerFile -> {
                     // Build children list if this is a directory
                     List<FileTreeResponse> children = null;
-                    if (file.getIsDirectory()) {
-                        List<File> childFiles = filesByParentId.getOrDefault(file.getId(), new ArrayList<>());
-                        children = buildFileTree(childFiles, filesByParentId);
+                    if (containerFile.getIsDirectory()) {
+                        List<ContainerFile> childContainerFiles = filesByParentId.getOrDefault(containerFile.getId(), new ArrayList<>());
+                        children = buildFileTree(childContainerFiles, filesByParentId);
                     }
 
                     // Create DTO for this file
                     return FileTreeResponse.builder()
-                            .id(file.getId())
-                            .name(file.getName())
-                            .path(file.getPath())
-                            .isDirectory(file.getIsDirectory())
-                            .extension(file.getExtension())
-                            .createdAt(file.getCreatedAt())
-                            .updatedAt(file.getUpdatedAt())
+                            .id(containerFile.getId())
+                            .name(containerFile.getName())
+                            .path(containerFile.getPath())
+                            .isDirectory(containerFile.getIsDirectory())
+                            .extension(containerFile.getExtension())
+                            .createdAt(containerFile.getCreatedAt())
+                            .updatedAt(containerFile.getUpdatedAt())
                             .children(children)
                             .build();
                 })
@@ -214,45 +214,45 @@ public class FileService {
     @Transactional
     public FileUpdateResponse updateFile(Long fileId, FileUpdateRequest requestDto) {
         // 1. 파일 존재 확인
-        File file = fileRepository.findById(fileId)
+        ContainerFile containerFile = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
-        String oldPath = file.getPath();
-        boolean isNameChanged = requestDto.getNewName() != null && !requestDto.getNewName().equals(file.getName());
+        String oldPath = containerFile.getPath();
+        boolean isNameChanged = requestDto.getNewName() != null && !requestDto.getNewName().equals(containerFile.getName());
 
         // 2. 파일 이름 및 경로 수정
         if (isNameChanged) {
-            file.setName(requestDto.getNewName());
+            containerFile.setName(requestDto.getNewName());
             // 부모 경로를 유지하면서 이름만 변경하여 새로운 path 생성
-            String newPath = updatePath(file.getParent(), requestDto.getNewName());
-            file.setPath(newPath);
+            String newPath = updatePath(containerFile.getParent(), requestDto.getNewName());
+            containerFile.setPath(newPath);
 
             // 확장자 추출 로직 (필요 시)
-            if (!file.getIsDirectory() && requestDto.getNewName().contains(".")) {
-                file.setExtension(requestDto.getNewName().substring(requestDto.getNewName().lastIndexOf(".") + 1));
+            if (!containerFile.getIsDirectory() && requestDto.getNewName().contains(".")) {
+                containerFile.setExtension(requestDto.getNewName().substring(requestDto.getNewName().lastIndexOf(".") + 1));
             }
 
             // S3 이름 변경 적용
-            s3FileService.renameFileInS3(oldPath, file);
+            s3FileService.renameFileInS3(oldPath, containerFile);
         }
 
         // 3. 파일 내용 수정 (디렉토리가 아닐 때만)
-        if (!file.getIsDirectory() && requestDto.getNewContent() != null) {
-            s3FileService.updateFileContentInS3(file, requestDto.getNewContent());
+        if (!containerFile.getIsDirectory() && requestDto.getNewContent() != null) {
+            s3FileService.updateFileContentInS3(containerFile, requestDto.getNewContent());
         }
 
         // DB 반영
-        File updatedFile = fileRepository.save(file);
+        ContainerFile updatedContainerFile = fileRepository.save(containerFile);
 
         return FileUpdateResponse.builder()
-            .fileId(updatedFile.getId())
-            .fileName(updatedFile.getName())
-            .parentId(updatedFile.getParent() != null ? updatedFile.getParent().getId() : null)
-            .isDirectory(updatedFile.getIsDirectory())
-            .filePath(updatedFile.getPath())
-            .createdAt(updatedFile.getCreatedAt())
-            .updatedAt(updatedFile.getUpdatedAt())
-            .fileExtension(updatedFile.getExtension())
+            .fileId(updatedContainerFile.getId())
+            .fileName(updatedContainerFile.getName())
+            .parentId(updatedContainerFile.getParent() != null ? updatedContainerFile.getParent().getId() : null)
+            .isDirectory(updatedContainerFile.getIsDirectory())
+            .filePath(updatedContainerFile.getPath())
+            .createdAt(updatedContainerFile.getCreatedAt())
+            .updatedAt(updatedContainerFile.getUpdatedAt())
+            .fileExtension(updatedContainerFile.getExtension())
             .content(requestDto.getNewContent())
             .description("파일 정보가 수정되었습니다.")
             .build();
@@ -261,7 +261,7 @@ public class FileService {
     /**
      * 부모 디렉토리 정보와 새 이름을 조합하여 새로운 경로를 생성합니다.
      */
-    private String updatePath(File parent, String name) {
+    private String updatePath(ContainerFile parent, String name) {
         // 1. 부모가 아예 없으면 최상위(Root) 파일이므로 /이름
         if (parent == null) {
             return "/" + name;
@@ -292,11 +292,11 @@ public class FileService {
     public FileMoveResponse moveFile(Long fileId, FileMoveRequest request) {
 
         // 1. 이동할 파일 조회
-        File file = fileRepository.findById(fileId)
+        ContainerFile containerFile = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         // 2. 대상 부모 디렉토리 결정
-        File targetParent = null; // 기본값 null (루트 의미)
+        ContainerFile targetParent = null; // 기본값 null (루트 의미)
 
         // targetParentId가 있는 경우에만 DB에서 부모를 조회
         if (request.getTargetParentId() != null) {
@@ -309,24 +309,24 @@ public class FileService {
             }
 
             // 순환 참조 방지
-            if (isChildOf(targetParent, file)) {
+            if (isChildOf(targetParent, containerFile)) {
                 throw new CoreException(FileErrorCode.INVALID_FILE_PATH);
             }
         }
 
         // 3. 새로운 루트 경로 계산 (위에서 수정한 updatePath 사용)
-        String newRootPath = updatePath(targetParent, file.getName());
+        String newRootPath = updatePath(targetParent, containerFile.getName());
 
         // 4. 재귀적으로 DB와 S3 경로 업데이트 실행
-        moveRecursive(file, targetParent, newRootPath);
+        moveRecursive(containerFile, targetParent, newRootPath);
 
         return FileMoveResponse.builder()
-            .fileId(file.getId())
-            .fileName(file.getName())
-            .newParentId(file.getParent() != null ? file.getParent().getId() : null)
-            .newPath(file.getPath())
-            .isDirectory(file.getIsDirectory())
-            .updatedAt(file.getUpdatedAt())
+            .fileId(containerFile.getId())
+            .fileName(containerFile.getName())
+            .newParentId(containerFile.getParent() != null ? containerFile.getParent().getId() : null)
+            .newPath(containerFile.getPath())
+            .isDirectory(containerFile.getIsDirectory())
+            .updatedAt(containerFile.getUpdatedAt())
             .description("파일이 루트 또는 지정된 폴더로 성공적으로 이동되었습니다.")
             .build();
     }
@@ -334,21 +334,21 @@ public class FileService {
     /**
      * 파일 및 폴더를 재귀적으로 이동시키고 DB/S3 정보를 갱신합니다.
      */
-    private void moveRecursive(File file, File newParent, String newPath) {
+    private void moveRecursive(ContainerFile containerFile, ContainerFile newParent, String newPath) {
         // 중요: S3 이동 시 이제 엔티티 객체를 직접 넘깁니다.
-        s3FileService.moveS3Object(file, newPath);
+        s3FileService.moveS3Object(containerFile, newPath);
 
         // DB 정보 업데이트
-        file.setParent(newParent);
-        file.setPath(newPath);
-        fileRepository.save(file);
+        containerFile.setParent(newParent);
+        containerFile.setPath(newPath);
+        fileRepository.save(containerFile);
 
         // 폴더인 경우 하위 자식들도 재귀적으로 이동
-        if (file.getIsDirectory()) {
-            List<File> children = fileRepository.findByParent(file);
-            for (File child : children) {
+        if (containerFile.getIsDirectory()) {
+            List<ContainerFile> children = fileRepository.findByParent(containerFile);
+            for (ContainerFile child : children) {
                 String childNewPath = newPath.endsWith("/") ? newPath + child.getName() : newPath + "/" + child.getName();
-                moveRecursive(child, file, childNewPath);
+                moveRecursive(child, containerFile, childNewPath);
             }
         }
     }
@@ -356,7 +356,7 @@ public class FileService {
     /**
      * target이 potentialParent의 하위 폴더인지 확인 (순환 참조 체크)
      */
-    private boolean isChildOf(File node, File potentialParent) {
+    private boolean isChildOf(ContainerFile node, ContainerFile potentialParent) {
         if (node == null) return false;
         if (node.getId().equals(potentialParent.getId())) return true;
         return isChildOf(node.getParent(), potentialParent);
@@ -370,19 +370,19 @@ public class FileService {
     @Transactional
     public FileRemoveResponse removeFile(Long fileId, Long containerId) {
         // 1. 삭제할 파일 조회
-        File file = fileRepository.findById(fileId)
+        ContainerFile containerFile = fileRepository.findById(fileId)
             .orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
         // 2. 컨테이너 소유권 검증
-        if (!file.getContainerId().equals(containerId)) {
+        if (!containerFile.getContainerId().equals(containerId)) {
             throw new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND);
         }
 
-        String deletedName = file.getName();
-        String deletedPath = file.getPath();
+        String deletedName = containerFile.getName();
+        String deletedPath = containerFile.getPath();
 
         // 3. 재귀적으로 S3 및 DB 삭제 실행
-        deleteRecursive(file);
+        deleteRecursive(containerFile);
 
         return FileRemoveResponse.builder()
             .fileId(fileId)
@@ -395,22 +395,22 @@ public class FileService {
     /**
      * 하위 항목들을 탐색하며 S3 객체를 먼저 지우고 DB 레코드를 삭제합니다.
      */
-    private void deleteRecursive(File file) {
+    private void deleteRecursive(ContainerFile containerFile) {
         // 폴더인 경우 하위 자식들을 먼저 처리
-        if (file.getIsDirectory()) {
+        if (containerFile.getIsDirectory()) {
             // findByParent를 사용하여 자식 목록 조회
-            List<File> children = fileRepository.findByParent(file);
-            for (File child : children) {
+            List<ContainerFile> children = fileRepository.findByParent(containerFile);
+            for (ContainerFile child : children) {
                 deleteRecursive(child);
             }
         }
 
         // S3에서 삭제
-        s3FileService.deleteFileFromS3(file);
+        s3FileService.deleteFileFromS3(containerFile);
 
         // DB에서 삭제 (부모부터 지우면 cascade에 의해 자식이 사라질 수 있으나,
         // S3 삭제를 위해 자식부터 명시적으로 지우는 것이 안전함)
-        fileRepository.delete(file);
+        fileRepository.delete(containerFile);
     }
 
 }
