@@ -26,5 +26,5 @@ public interface ContainerMemberRepository extends JpaRepository<ContainerMember
     void deleteAllByUser(User user);
 
     @Query("SELECT cm.container FROM ContainerMember cm WHERE cm.user.id = :userId")
-    List<Container> findContainerByUserId(@Param("userId") Long containerId);
+    List<Container> findContainerByUserId(@Param("userId") Long userId);
 }

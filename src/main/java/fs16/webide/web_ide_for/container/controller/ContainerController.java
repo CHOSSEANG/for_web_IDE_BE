@@ -63,7 +63,6 @@ public class ContainerController {
     @GetMapping("/list")
     public ApiResponse<List<ContainerListResponse>> findAllContainers(@AuthenticationPrincipal Long userId) {
         log.info("Container list request received for user ID: {}", userId);
-        ContainerListRequest request = new ContainerListRequest(userId);
         List<Container> containers = containerMemberService.findContainersByUser(userId);
         return ApiResponse.success(ContainerListResponse.fromList(containers));
     }
