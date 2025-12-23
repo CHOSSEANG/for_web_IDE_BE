@@ -26,7 +26,7 @@ public class ContainerFile {
     @JoinColumn(name = "parent_id") // DB 컬럼명
     private ContainerFile parent; // 부모 파일(폴더) 객체 직접 참조
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ContainerFile> children = new ArrayList<>(); // 하위 파일들 목록
     
     @Column(name = "is_directory")
