@@ -72,6 +72,31 @@ jobs:
           source: "./build/libs/web_IDE_for-0.0.1-SNAPSHOT.jar"
           target: "/home/ubuntu/action/"
 
+      # EC2에서 애플리케이션 실행
+      - name: Execute Application on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_BACK }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY_BACK }}
+          script: |
+            # 기존 프로세스 종료
+            sudo fuser -k 8080/tcp || true
+
+            # 환경 변수 로드 및 애플리케이션 실행
+            cd /home/ubuntu/action
+            source .env
+            nohup java -jar build/libs/web_IDE_for-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+
+            # 애플리케이션 시작 확인
+            sleep 10
+            if curl -f http://localhost:8080/health; then
+              echo "Application started successfully"
+            else
+              echo "Application failed to start"
+              exit 1
+            fi
+
       # 보안 그룹에 추가한 github IP 제거
       - name: Remove Github Actions IP from Security group
         run: |
