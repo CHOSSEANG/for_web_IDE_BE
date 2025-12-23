@@ -1,13 +1,11 @@
 package fs16.webide.web_ide_for.chat.controller;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import fs16.webide.web_ide_for.chat.dto.ChatRequest;
 import fs16.webide.web_ide_for.chat.dto.ChatResponse;
 import fs16.webide.web_ide_for.chat.service.ChatService;
-import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
-import fs16.webide.web_ide_for.user.entity.User;
-import fs16.webide.web_ide_for.user.error.UserErrorCode;
-import fs16.webide.web_ide_for.user.repository.UserRepository;
+import fs16.webide.web_ide_for.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +26,7 @@ public class ChatController {
     private final ChatService chatService;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final Cache<Long, UserInfoResponse> userCache;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Operation(summary = "채팅 조회", description = "7일 기간의 채팅을 조회합니다")
     @GetMapping("/chat")
@@ -39,14 +37,10 @@ public class ChatController {
 
     @Operation(summary = "채팅 전송", description = "실시간으로 채팅을 보냅니다")
     @MessageMapping("/chat/{containerId}")
-    public void send(@DestinationVariable Long containerId, ChatResponse msg, Principal principal) {
+    public void send(@DestinationVariable Long containerId, ChatRequest msg, Principal principal) {
         Long userId = Long.valueOf(principal.getName());
 
-        UserInfoResponse userInfoResponse = userCache.get(userId, id-> {
-            User user = userRepository.findById(id)
-                    .orElseThrow(()-> new CoreException(UserErrorCode.USER_NOT_FOUND));
-            return new UserInfoResponse(user.getName(),user.getProfileImageUrl());
-        });
+        UserInfoResponse userInfoResponse = userService.getUserInfo(userId);
 
         ChatResponse response = new ChatResponse(
                 userInfoResponse.getUserName(),

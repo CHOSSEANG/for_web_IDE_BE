@@ -1,9 +1,9 @@
 package fs16.webide.web_ide_for.user.service;
 
-import fs16.webide.web_ide_for.common.error.CommonErrorCode;
+import com.github.benmanes.caffeine.cache.Cache;
 import fs16.webide.web_ide_for.common.error.CoreException;
-import fs16.webide.web_ide_for.container_member.entity.ContainerMember;
 import fs16.webide.web_ide_for.container_member.repository.ContainerMemberRepository;
+import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
 import fs16.webide.web_ide_for.user.dto.UserSearchResponse;
 import fs16.webide.web_ide_for.user.entity.User;
 import fs16.webide.web_ide_for.user.error.UserErrorCode;
@@ -11,7 +11,7 @@ import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -22,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ContainerMemberRepository containerMemberRepository;
+    private final Cache<Long, UserInfoResponse> userCache;
 
     // 회원가입 및 로그인
     public void findOrCreateUser(String clerkUserId, Map<String,Object> claims) {
@@ -69,7 +70,7 @@ public class UserService {
     }
 
     // webhook - 유저 업데이트(이름 변경 / 프로필 변경)
-    public void updateUser(String clerkUserId,Map<String,Object> data) {
+    public void updateUser(Long userId,Map<String,Object> data) {
 
         String firstName = data.getOrDefault("first_name","").toString();
         String lastName = data.getOrDefault("last_name","").toString();
@@ -77,7 +78,7 @@ public class UserService {
         String profileImageUrl = data.getOrDefault("profile_image_url","").toString();
 
         boolean changed = false;
-        Optional<User> optionalUser = userRepository.findByClerkId(clerkUserId);
+        Optional<User> optionalUser = userRepository.findById(userId);
 
         if(optionalUser.isEmpty()){
             log.info("clerkUserId 없음");
@@ -104,16 +105,20 @@ public class UserService {
 
         if(changed){
             userRepository.save(user);
+            userCache.invalidate(userId);
         }
     }
 
+    @Transactional
     // webhook - 유저 탈퇴(status = N)
-    public void deleteUser(String clerkUserId) {
-        userRepository.findByClerkId(clerkUserId)
+    public void deleteUser(Long userId) {
+        userRepository.findById(userId)
                 .ifPresent(user -> {
                     user.setStatus("N");  // 삭제 대신 상태 변경
                     userRepository.save(user);
-                    log.info("유저 탈퇴 처리 완료 status='N' clerkId={}", clerkUserId);
+                    containerMemberRepository.deleteAllByUser(user);
+                    userCache.invalidate(userId);
+                    log.info("유저 탈퇴 처리 완료 status='N' userId={}", userId);
                 });
     }
 
@@ -133,5 +138,33 @@ public class UserService {
                         user.getProfileImageUrl(),
                         invitedUserIds.contains(user.getId())
                 )).toList();
+    }
+
+    public Long getUserIdByClerkId(String clerkUserId){
+        return userRepository.findByClerkId(clerkUserId)
+                .map(User::getId).orElseThrow(()->new CoreException(UserErrorCode.USER_NOT_FOUND));
+    }
+
+
+    // 유저 기본 정보 조회(WebSocket / Chat 공용)
+    public UserInfoResponse getUserInfo(Long userId) {
+        return userCache.get(userId, id -> {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new CoreException(UserErrorCode.USER_NOT_FOUND));
+
+            if (!"Y".equals(user.getStatus())) {
+                throw new CoreException(UserErrorCode.USER_NOT_FOUND);
+            }
+
+            return new UserInfoResponse(
+                    user.getName(),
+                    user.getProfileImageUrl()
+            );
+        });
+    }
+
+    //  WebSocket CONNECT 시 캐시 워밍업
+    public void preloadUserInfo(Long userId) {
+        getUserInfo(userId);
     }
 }
