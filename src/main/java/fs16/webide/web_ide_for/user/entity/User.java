@@ -20,7 +20,4 @@ public class User {
     private String profileImageUrl;
     private String status = "Y";
 
-    public User(Long id) {
-        this.id = id;
-    }
 }

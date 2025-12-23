@@ -10,7 +10,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class CodingTimeRequestDto {
 
-    private Long userId;
     private Long containerId;
     private Long codingTimeMs;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

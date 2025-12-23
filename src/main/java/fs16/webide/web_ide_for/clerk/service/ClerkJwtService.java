@@ -2,6 +2,8 @@ package fs16.webide.web_ide_for.clerk.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fs16.webide.web_ide_for.clerk.ClerkPublicKeyProvider;
+import fs16.webide.web_ide_for.clerk.error.JwtErrorCode;
+import fs16.webide.web_ide_for.common.error.CoreException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +47,8 @@ public class ClerkJwtService {
             return new ObjectMapper().convertValue(claims, Map.class);
 
         } catch (Exception e){
-            throw new RuntimeException("Clerk JWT Token validation failed: " + e.getMessage(), e);
+            throw new CoreException(JwtErrorCode.JWT_VALIDATION_FAILED);
+
         }
     }
 
@@ -56,7 +59,7 @@ public class ClerkJwtService {
 
             return   (String) new ObjectMapper().readValue(header, Map.class).get("kid");
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract kid from token", e);
+            throw new CoreException(JwtErrorCode.JWT_KID_FAILED);
         }
     }
 }
