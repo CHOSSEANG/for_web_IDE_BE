@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static fs16.webide.web_ide_for.common.error.CommonErrorCode.BAD_REQUEST;
 
 
 @Service
@@ -30,34 +28,17 @@ public class ContainerMemberService {
     private final ContainerRepository containerRepository;
     private final UserRepository userRepository;
 
-
-    // 단일 초대
-    public void inviteMember(Long containerId, Long userId) {
-
-        if(containerMemberRepository.existsByContainerIdAndUserId(containerId,userId)){
-            throw new CoreException(UserErrorCode.USER_EXISTED);
-        }
-        // User, Container 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CoreException(UserErrorCode.USER_NOT_FOUND));
-        Container container = containerRepository.findById(containerId)
-                .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
-        ContainerMember containerMember = new ContainerMember(user, container);
-        containerMemberRepository.save(containerMember);
-    }
-
-
-    // 여러명 초대
+    // 초대
     public void invitedMembers(Long containerId, List<Long> userIds){
         Container container = containerRepository.findById(containerId)
                 .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
         Set<Long> invitedUserIds = new HashSet<>(containerMemberRepository.findUserIdsByContainerId(containerId));
 
-        List<User> users = userIds.stream()
+        List<Long> newIds = userIds.stream()
                 .filter(id -> !invitedUserIds.contains(id))
-                .map(id -> userRepository.findById(id)
-                        .orElseThrow(() -> new CoreException(UserErrorCode.USER_NOT_FOUND)))
                 .toList();
+        List<User> users = userRepository.findAllById(newIds);
+        if (newIds.size() != users.size()) throw new CoreException(UserErrorCode.USER_NOT_FOUND);
 
         if(users.isEmpty()){
             return;

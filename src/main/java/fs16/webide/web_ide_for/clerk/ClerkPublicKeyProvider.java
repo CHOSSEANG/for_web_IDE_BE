@@ -1,6 +1,8 @@
 package fs16.webide.web_ide_for.clerk;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fs16.webide.web_ide_for.clerk.error.JwtErrorCode;
+import fs16.webide.web_ide_for.common.error.CoreException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -42,10 +44,10 @@ public class ClerkPublicKeyProvider {
                 }
             }
 
-            throw new RuntimeException("Public key not found for kid: " + kid);
+            throw new CoreException(JwtErrorCode.PUBLIC_KEY_NOT_FOUND);
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch JWKS", e);
+            throw new CoreException(JwtErrorCode.JWK_FETCH_FAILED);
         }
     }
 

@@ -53,8 +53,8 @@ public class CodingSessionService{
     }
 
     // 받는 데이터
-    public void saveCodingTime(CodingTimeRequestDto dto){
-        CodingSession session = new CodingSession(dto.getUserId(),dto.getContainerId(),dto.getCodingTimeMs(),dto.getRecordDate());
+    public void saveCodingTime(CodingTimeRequestDto dto, Long userId){
+        CodingSession session = new CodingSession(userId,dto.getContainerId(),dto.getCodingTimeMs(),dto.getRecordDate());
         codingSessionRepository.save(session);
     }
 

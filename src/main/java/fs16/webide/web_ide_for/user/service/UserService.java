@@ -81,7 +81,7 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if(optionalUser.isEmpty()){
-            log.info("clerkUserId 없음");
+            log.info("userId 없음");
             return;
         }
 
