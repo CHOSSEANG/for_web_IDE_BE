@@ -16,8 +16,4 @@ public class ContainerCreateRequest {
 	@Schema(description = "컨테이너 이름", example = "My Container")
 	private String name;
 
-	// 2. 소유자 ID (필수)
-	// NOTE: 실제 서비스에서는 이 필드 대신 로그인된 사용자 세션/토큰에서 ID를 가져오는 것이 보안상 더 좋습니다.
-	@Schema(description = "소유자 정보")
-	private User user;
 }

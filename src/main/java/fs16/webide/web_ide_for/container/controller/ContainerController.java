@@ -8,6 +8,7 @@ import fs16.webide.web_ide_for.container_member.dto.MemberInviteRequest;
 import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
 import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
 import fs16.webide.web_ide_for.user.entity.User;
+import fs16.webide.web_ide_for.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +36,7 @@ public class ContainerController {
 
     private final ContainerService containerService;
     private final ContainerMemberService containerMemberService;
+    private final UserService userService;
 
     /**
      * 새로운 컨테이너를 생성합니다.
@@ -44,9 +46,10 @@ public class ContainerController {
      */
     @Operation(summary = "컨테이너 생성", description = "새로운 컨테이너를 생성합니다")
     @PostMapping("/create")
-    public ApiResponse<ContainerCreateResponse> createContainer(@RequestBody ContainerCreateRequest request) {
+    public ApiResponse<ContainerCreateResponse> createContainer(@RequestBody ContainerCreateRequest request,@AuthenticationPrincipal Long userId) {
         log.info("Container creation request received: {}", request);
-        Container container = containerService.createContainer(request);
+        User user = userService.getUserById(userId);
+        Container container = containerService.createContainer(request, user);
         return ApiResponse.success(ContainerCreateResponse.from(container));
     }
 
@@ -61,7 +64,7 @@ public class ContainerController {
     public ApiResponse<List<ContainerListResponse>> findAllContainers(@AuthenticationPrincipal Long userId) {
         log.info("Container list request received for user ID: {}", userId);
         ContainerListRequest request = new ContainerListRequest(userId);
-        List<Container> containers = containerService.findAllContainersByUserId(request);
+        List<Container> containers = containerMemberService.findContainersByUser(userId);
         return ApiResponse.success(ContainerListResponse.fromList(containers));
     }
 

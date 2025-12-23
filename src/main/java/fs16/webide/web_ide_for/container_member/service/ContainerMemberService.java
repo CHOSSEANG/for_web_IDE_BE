@@ -69,4 +69,8 @@ public class ContainerMemberService {
     public List<User> findUsersByContainer(Long containerId) {
         return containerMemberRepository.findUsersByContainerId(containerId);
     }
+
+    public List<Container> findContainersByUser(Long userId) {
+        return containerMemberRepository.findContainerByUserId(userId);
+    }
 }

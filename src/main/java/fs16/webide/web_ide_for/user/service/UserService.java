@@ -167,4 +167,12 @@ public class UserService {
     public void preloadUserInfo(Long userId) {
         getUserInfo(userId);
     }
+
+    // 유저 반환
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CoreException(UserErrorCode.USER_NOT_FOUND));
+    }
 }

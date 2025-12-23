@@ -62,20 +62,17 @@ public class ContainerService {
 	 * @return 저장된 Container 엔티티
 	 */
 	@Transactional
-	public Container createContainer(ContainerCreateRequest request) {
-		// 1. 사용자(User) 엔티티 조회 및 검증
-		User user = findUserById(request.getUser().getId());
-
-		// 2. Container 엔티티 생성
+	public Container createContainer(ContainerCreateRequest request, User user) {
+		// 1. Container 엔티티 생성
 		Container newContainer = Container.builder()
 			.name(request.getName())
 			.user(user) // 조회한 User 엔티티를 설정
 			.build();
 
-		// 3. Container 엔티티 저장
+		// 2. Container 엔티티 저장
 		Container saveContainer = containerRepository.save(newContainer);
 
-		// 4. 컨테이너 생성 시 컨테이너 멤버에 자동 저장
+		// 3. 컨테이너 생성 시 컨테이너 멤버에 자동 저장
 		ContainerMember containerMember = new ContainerMember(user,saveContainer);
 		containerMemberRepository.save(containerMember);
 
