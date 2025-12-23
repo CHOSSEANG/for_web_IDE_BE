@@ -93,6 +93,8 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
             CLERK_WEBHOOK_SECRET_KEY=${{ secrets.CLERK_WEBHOOK_SECRET_KEY }}
+            AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}
+            AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}
             EOF
 
             # .env 파일 권한 설정 (보안)
