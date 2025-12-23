@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "파일/폴더 이동 요청")
 public class FileMoveRequest {
-	@Schema(description = "이동할 대상 ID", example = "15")
-	private Long fileId;
 
 	@Schema(description = "도착지 부모 폴더 ID (루트 이동 시 null 가능)", example = "2")
 	private Long targetParentId;
