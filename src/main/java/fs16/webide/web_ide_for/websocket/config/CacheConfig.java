@@ -3,7 +3,6 @@ package fs16.webide.web_ide_for.websocket.config;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
-import fs16.webide.web_ide_for.user.entity.User;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
