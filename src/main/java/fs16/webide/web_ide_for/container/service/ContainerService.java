@@ -79,20 +79,7 @@ public class ContainerService {
 		return saveContainer;
 	}
 
-	/**
-	 * 특정 사용자의 모든 컨테이너를 조회합니다.
-	 * 
-	 * @param request 컨테이너 목록 조회 요청 DTO
-	 * @return 사용자가 소유한 컨테이너 목록
-	 */
-	@Transactional
-	public List<Container> findAllContainersByUserId(ContainerListRequest request) {
-		// 사용자 존재 여부 확인
-		findUserById(request.getUserId());
 
-		// 사용자 ID로 컨테이너 목록 조회
-		return containerRepository.findAllByUserId(request.getUserId());
-	}
 
 	/**
 	 * 특정 ID의 컨테이너를 조회합니다.
