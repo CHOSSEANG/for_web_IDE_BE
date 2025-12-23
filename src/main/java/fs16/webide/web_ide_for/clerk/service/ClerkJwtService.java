@@ -47,7 +47,7 @@ public class ClerkJwtService {
             return new ObjectMapper().convertValue(claims, Map.class);
 
         } catch (Exception e){
-            throw new CoreException(JwtErrorCode.JWT_VALIDATION_FAILED);
+            throw new CoreException(JwtErrorCode.JWT_VALIDATION_FAILED,e);
 
         }
     }
@@ -59,7 +59,7 @@ public class ClerkJwtService {
 
             return   (String) new ObjectMapper().readValue(header, Map.class).get("kid");
         } catch (Exception e) {
-            throw new CoreException(JwtErrorCode.JWT_KID_FAILED);
+            throw new CoreException(JwtErrorCode.JWT_KID_FAILED,e);
         }
     }
 }
