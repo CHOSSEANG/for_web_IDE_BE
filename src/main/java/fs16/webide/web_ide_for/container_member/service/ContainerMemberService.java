@@ -71,6 +71,6 @@ public class ContainerMemberService {
     }
 
     public List<Container> findContainersByUser(Long userId) {
-        return containerMemberRepository.findContainerByUserId(userId);
+        return containerMemberRepository.findContainersByUserId(userId);
     }
 }
