@@ -48,4 +48,8 @@ public class Container {
 		this.createdAt = LocalDateTime.now();
 	}
 
+	public Container(Long id) {
+		this.id = id;
+	}
+
 }

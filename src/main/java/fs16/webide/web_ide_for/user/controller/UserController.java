@@ -4,6 +4,8 @@ import fs16.webide.web_ide_for.user.dto.UserSearchResponse;
 import fs16.webide.web_ide_for.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "User", description = "User 컨트롤러")
+@Tag(name = "User", description = "유저 API")
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -34,6 +36,50 @@ public class UserController {
     @GetMapping("/search")
     public List<UserSearchResponse> findUsers(@RequestParam Long containerId ,@RequestParam String keyword) {
         return userService.findUsers(containerId,keyword);
+    }
+
+
+
+    @Operation(summary = "프로필 변경", description = "이름, 프로필 이미지를 변경할 수 있습니다")
+    @PostMapping("/update")
+    public ResponseEntity<String> handleWebhook(@RequestBody Map<String,Object> payload){
+
+        String eventType = (String) payload.get("type");
+        Object dataObj = payload.get("data");
+        if (!(dataObj instanceof Map<?, ?>)) {
+            log.warn("Invalid data type in webhook payload");
+            return ResponseEntity.badRequest().body("invalid payload");
+        }
+
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
+
+        if (eventType == null || data == null) {
+            log.warn("Invalid webhook payload");
+            return ResponseEntity.badRequest().body("invalid payload");
+        }
+
+        // Clerk user id
+        String clerkUserId = (String) data.get("id");
+        Long userId = userService.getUserIdByClerkId(clerkUserId);
+
+        switch (eventType) {
+            case "user.created":
+                userService.findOrCreateUser(clerkUserId,data);
+                break;
+
+            case "user.updated":
+                userService.updateUser(userId,data);
+                break;
+
+            case "user.deleted":
+                userService.deleteUser(userId);
+                break;
+
+            default:
+                log.info("Unhandled Clerk event: {}", eventType);
+        }
+
+        return ResponseEntity.ok("ok");
     }
 
 

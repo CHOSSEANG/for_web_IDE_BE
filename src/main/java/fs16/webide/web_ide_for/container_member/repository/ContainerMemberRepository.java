@@ -10,11 +10,7 @@ import java.util.List;
 
 public interface ContainerMemberRepository extends JpaRepository<ContainerMember, Long>  {
 
-    @Query("""
-            SELECT cm.userId
-            FROM ContainerMember cm
-            WHERE cm.containerId =:containerId
-            """)
+    @Query("SELECT cm.user.id FROM ContainerMember cm WHERE cm.container.id = :containerId")
     List<Long> findUserIdsByContainerId(@Param("containerId") Long containerId);
 
     boolean existsByContainerIdAndUserId(Long containerId, Long userId);
@@ -22,4 +18,9 @@ public interface ContainerMemberRepository extends JpaRepository<ContainerMember
     void deleteByContainerIdAndUserId(Long containerId, Long userId);
 
     void deleteByContainerId(Long containerId);
+
+    @Query("SELECT cm.user FROM ContainerMember cm WHERE cm.container.id = :containerId")
+    List<User> findUsersByContainerId(@Param("containerId") Long containerId);
+
+    void deleteAllByUser(User user);
 }
