@@ -25,7 +25,6 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final Cache<Long, UserInfoResponse> userCache;
     private final UserService userService;
 
     @Operation(summary = "채팅 조회", description = "7일 기간의 채팅을 조회합니다")
