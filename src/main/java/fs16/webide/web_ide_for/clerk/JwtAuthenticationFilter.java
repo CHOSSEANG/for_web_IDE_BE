@@ -49,14 +49,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String clerkUserId = claims.get("sub").toString();
                 // 2. DB에서 유저 확인, 없으면 생성 (로그인 시점)
                 userService.findOrCreateUser(clerkUserId, claims);
-
+                // (userId 가져오기)
+                Long userId = userService.getUserIdByClerkId(clerkUserId);
                 // 3. 인증 세팅만 수행
                 UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(clerkUserId, null, null);
+                        new UsernamePasswordAuthenticationToken(userId, null, null);
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
             } catch (Exception e) {
                 log.error("JWT 인증/유저 처리 실패", e);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
 
