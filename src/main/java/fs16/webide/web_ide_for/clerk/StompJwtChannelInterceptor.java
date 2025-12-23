@@ -3,6 +3,7 @@ package fs16.webide.web_ide_for.clerk;
 import fs16.webide.web_ide_for.chat.error.ChatErrorCode;
 import fs16.webide.web_ide_for.clerk.service.ClerkJwtService;
 import fs16.webide.web_ide_for.common.error.CoreException;
+import fs16.webide.web_ide_for.user.error.UserErrorCode;
 import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -21,7 +22,6 @@ import java.util.Map;
 @Component
 public class StompJwtChannelInterceptor implements ChannelInterceptor {
 
-    private static final String USER_ID_KEY = "USER_ID";
 
     private final ClerkJwtService clerkJwtService;
     private final UserRepository userRepository;
@@ -63,7 +63,7 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
         String clerkId = claims.get("sub").toString();
 
         Long userId = userRepository.findByClerkId(clerkId)
-                .orElseThrow()
+                .orElseThrow(()-> new CoreException(UserErrorCode.USER_NOT_FOUND))
                 .getId();
 
         Principal principal =

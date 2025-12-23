@@ -3,8 +3,8 @@ package fs16.webide.web_ide_for.chat.service;
 import fs16.webide.web_ide_for.chat.dto.ChatResponse;
 import fs16.webide.web_ide_for.chat.entity.Chat;
 import fs16.webide.web_ide_for.chat.repository.ChatRepository;
-import fs16.webide.web_ide_for.container.entity.Container;
-import fs16.webide.web_ide_for.user.entity.User;
+import fs16.webide.web_ide_for.container.repository.ContainerRepository;
+import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,16 +19,21 @@ import java.util.List;
 @Service
 @Slf4j
 public class ChatService {
+    private static final int CHAT_PAGE_SIZE = 20;
 
     private final ChatRepository chatRepository;
+    private final ContainerRepository containerRepository;
+    private final UserRepository userRepository;
 
-    public ChatService(ChatRepository chatRepository) {
+    public ChatService(ChatRepository chatRepository, ContainerRepository containerRepository, UserRepository userRepository) {
         this.chatRepository = chatRepository;
+        this.containerRepository = containerRepository;
+        this.userRepository = userRepository;
     }
 
     // 지난 일주일간 채팅 메세지 조회
     public List<ChatResponse> chatList(Long containerId, LocalDateTime lastCreatedAt){
-       Pageable pageable = PageRequest.of(0,20);
+       Pageable pageable = PageRequest.of(0,CHAT_PAGE_SIZE);
         LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
         List<Chat> chats = chatRepository.getChatList(
                 containerId, lastCreatedAt, oneWeekAgo,pageable
@@ -47,8 +52,8 @@ public class ChatService {
     public void saveMessageAsync(Long containerId, Long userId, String message) {
         try {
             Chat chat = Chat.builder()
-                    .container(new Container(containerId))
-                    .sender(new User(userId))
+                    .container(containerRepository.getReferenceById(containerId))
+                    .sender(userRepository.getReferenceById(userId))
                     .message(message)
                     .build();
 

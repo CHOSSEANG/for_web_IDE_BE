@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "chat")
@@ -34,9 +33,5 @@ public class Chat {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public Chat(User sender, String message, LocalDateTime createdAt) {
-        this.sender = sender;
-        this.message = message;
-        this.createdAt = createdAt;
-    }
+
 }
