@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "User", description = "User 컨트롤러")
+@Tag(name = "User", description = "유저 API")
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -60,6 +60,7 @@ public class UserController {
 
         // Clerk user id
         String clerkUserId = (String) data.get("id");
+        Long userId = userService.getUserIdByClerkId(clerkUserId);
 
         switch (eventType) {
             case "user.created":
@@ -67,11 +68,11 @@ public class UserController {
                 break;
 
             case "user.updated":
-                userService.updateUser(clerkUserId,data);
+                userService.updateUser(userId,data);
                 break;
 
             case "user.deleted":
-                userService.deleteUser(clerkUserId);
+                userService.deleteUser(userId);
                 break;
 
             default:
@@ -81,11 +82,6 @@ public class UserController {
         return ResponseEntity.ok("ok");
     }
 
-    @Getter
-    @AllArgsConstructor
-    public static class UserInfoResponse {
-        private String userName;
-        private String imageUrl;
-    }
+
 
 }
