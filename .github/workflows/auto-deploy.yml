@@ -72,8 +72,7 @@ jobs:
           source: "./build/libs/web_IDE_for-0.0.1-SNAPSHOT.jar"
           target: "/home/ubuntu/action/"
 
-      # EC2에서 애플리케이션 실행
-      - name: Execute Application on EC2
+      - name: Deploy and Execute Application
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST_BACK }}
@@ -83,17 +82,43 @@ jobs:
             # 기존 프로세스 종료
             sudo fuser -k 8080/tcp || true
 
-            # 환경 변수 로드 및 애플리케이션 실행
             cd /home/ubuntu/action
-            source .env
-            nohup java -jar build/libs/web_IDE_for-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
 
-            # 애플리케이션 시작 확인
-            sleep 10
-            if curl -f http://localhost:8080/health; then
-              echo "Application started successfully"
+            # .env 파일 생성 (덮어쓰기)
+            cat > .env << 'EOF'
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
+            CLERK_WEBHOOK_SECRET_KEY=${{ secrets.CLERK_WEBHOOK_SECRET_KEY }}
+            EOF
+
+            # .env 파일 권한 설정 (보안)
+            chmod 600 .env
+
+            # 실행 스크립트 생성
+            cat > start.sh << 'EOF'
+            #!/bin/bash
+            source /home/ubuntu/action/.env
+            java -jar /home/ubuntu/action/build/libs/web_IDE_for-0.0.1-SNAPSHOT.jar
+            EOF
+
+            chmod +x start.sh
+
+            # 백그라운드 실행
+            nohup ./start.sh > app.log 2>&1 &
+
+            # 프로세스 확인
+            sleep 30
+            if pgrep -f "web_IDE_for" > /dev/null; then
+              echo "✅ Application started successfully"
+              echo "Recent logs:"
+              tail -20 app.log
             else
-              echo "Application failed to start"
+              echo "❌ Application failed to start"
+              tail -50 app.log
               exit 1
             fi
 
