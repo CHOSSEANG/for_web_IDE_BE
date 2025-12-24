@@ -41,7 +41,7 @@ cloud:
       auto: false
 
 clerk:
-  jwks-url: https://clerk.webicapp.com/.well-known/jwks.json
-  issuer: https://clerk.webicapp.com
+  jwks-url: https://mighty-goat-45.clerk.accounts.dev/.well-known/jwks.json
+  issuer: https://mighty-goat-45.clerk.accounts.dev
   secret-key: ${CLERK_SECRET_KEY}
   webhook-secret-key: ${CLERK_WEBHOOK_SECRET_KEY}
