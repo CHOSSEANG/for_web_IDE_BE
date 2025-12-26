@@ -52,9 +52,22 @@ public class UserService {
         }
 
         // 이름 / 이미지
-        String firstName = claims.getOrDefault("first_name", "").toString();
-        String lastName = claims.getOrDefault("last_name", "").toString();
+        String firstName = Optional.ofNullable(claims.get("first_name"))
+                .map(Object::toString)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse("");
+
+        String lastName = Optional.ofNullable(claims.get("last_name"))
+                .map(Object::toString)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse("");
         String name = (lastName + firstName).trim();
+
+        if (name.isBlank() || name.equalsIgnoreCase("null")) {
+            name = "사용자";
+        }
         String profileImageUrl = claims.getOrDefault("image_url", "").toString();
 
 
