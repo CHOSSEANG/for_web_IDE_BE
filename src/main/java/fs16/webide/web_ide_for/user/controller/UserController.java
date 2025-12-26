@@ -45,16 +45,18 @@ public class UserController {
     @Operation(summary = "프로필 변경", description = "이름, 프로필 이미지를 변경할 수 있습니다")
     @PostMapping("/update")
     public ApiResponse<UserResponse> handleWebhook(@RequestBody Map<String,Object> payload){
-
+        log.info("====handleWebhook=====");
         String eventType = (String) payload.get("type");
+        log.info("====eventType====={}",eventType);
         Object dataObj = payload.get("data");
+
         if (!(dataObj instanceof Map<?, ?>)) {
             log.warn("Invalid data type in webhook payload");
             throw new CoreException(UserErrorCode.INVALID_PAYLOAD);
         }
 
         Map<String, Object> data = (Map<String, Object>) payload.get("data");
-
+        log.info("====data====={}",data);
         if (eventType == null || data == null) {
             log.warn("Invalid webhook payload");
             throw new CoreException(UserErrorCode.INVALID_PAYLOAD);
@@ -63,7 +65,7 @@ public class UserController {
         // Clerk user id
         String clerkUserId = (String) data.get("id");
         Long userId = userService.getUserIdByClerkId(clerkUserId);
-
+        log.info("====clerkUserId====={}",clerkUserId);
         switch (eventType) {
             case "user.created":
                 userService.findOrCreateUser(clerkUserId,data);

@@ -71,7 +71,7 @@ public class UserService {
 
     // webhook - 유저 업데이트(이름 변경 / 프로필 변경)
     public void updateUser(Long userId,Map<String,Object> data) {
-
+        log.info("====updateUser=====");
         String firstName = data.getOrDefault("first_name","").toString();
         String lastName = data.getOrDefault("last_name","").toString();
         String name = (lastName + firstName).trim();
