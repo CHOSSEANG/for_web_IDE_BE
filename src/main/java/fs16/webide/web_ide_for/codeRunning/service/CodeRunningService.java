@@ -3,71 +3,146 @@ package fs16.webide.web_ide_for.codeRunning.service;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
+import fs16.webide.web_ide_for.codeRunning.dto.CodeRunRequest;
+import fs16.webide.web_ide_for.file.entity.ContainerFile;
+import fs16.webide.web_ide_for.file.repository.FileRepository;
+import fs16.webide.web_ide_for.file.service.S3FileService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class CodeRunningService {
+
+	private final FileRepository fileRepository;
+	private final S3FileService s3FileService;
+
+
+	// 기존 S3 설정값들을 그대로 가져옵니다.
+	@Value("${cloud.aws.credentials.access-key}")
+	private String accessKey;
+
+	@Value("${cloud.aws.credentials.secret-key}")
+	private String secretKey;
+
+	@Value("${cloud.aws.region.static}")
+	private String region;
+
+	@Value("${cloud.aws.s3.bucket}")
+	private String bucket;
+
+	private final String host = "ec2-13-239-107-76.ap-southeast-2.compute.amazonaws.com";
+	private final String user = "ubuntu";
+	private final String pemPath = "/Users/chosseang/Downloads/webic_code_server.pem";
+
+	/**
+	* [기존 로직] 단순 쉘 명령어 실행 (/code/command 용)
+     */
 	public String executeCommand(String command) {
-		// --- 1. 설정 정보 (테스트용으로 직접 입력) ---
-		String host = "ec2-3-25-153-25.ap-southeast-2.compute.amazonaws.com"; // EC2 퍼블릭 IP
-		String user = "ubuntu";             // EC2 사용자 (Ubuntu는 ubuntu, Amazon Linux는 ec2-user)
-		String privateKeyPath = "/Users/chosseang/Downloads/webic_code_server.pem"; // 로컬에 있는 키 경로 (Windows 예시)
+		log.info("단순 명령어 실행: {}", command);
+		return executeSsh(command);
+	}
 
+	public String runS3FileOnEc2(CodeRunRequest request, Long userId) {
+		// 1. DB에서 파일 조회
+		ContainerFile containerFile = fileRepository.findById(request.getFileId())
+			.orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
+
+		// 2. S3 Key 생성 (S3FileService 로직 반영)
+		String s3Key = generateS3Key(containerFile);
+		String fileName = containerFile.getName();
+		String workDir = "/home/ubuntu/temp/" + userId + "/";
+
+		// 3. 언어별 명령어 설정
+		String language = determineLanguage(containerFile);
+		String runCmd = getRunCommand(language, workDir, fileName);
+
+		// 4. AWS 인증 환경 변수 설정 (EC2에 키를 저장하지 않는 방식)
+		String awsEnv = String.format("AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_DEFAULT_REGION=%s",
+			accessKey, secretKey, region);
+
+		// 5. 전체 실행 스크립트 구성
+		String fullCommand = String.format(
+			"mkdir -p %s && " +                 // 폴더 생성
+				"%s aws s3 cp s3://%s/%s %s%s && " + // S3에서 파일 복사 (키 주입)
+				"%s; " +                             // 코드 실행
+				"rm -rf %s",                         // 작업 완료 후 폴더 삭제
+			workDir, awsEnv, bucket, s3Key, workDir, fileName, runCmd, workDir
+		);
+
+		log.info("EC2 실행 요청 - User: {}, File: {}", userId, fileName);
+		return executeSsh(fullCommand);
+	}
+
+	// 기존 S3FileService.java의 로직 그대로 구현
+	private String generateS3Key(ContainerFile file) {
+		String path = file.getPath();
+		String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+		return file.getContainerId() + "/" + cleanPath;
+	}
+
+	private String determineLanguage(ContainerFile file) {
+		// 파일 확장자나 이름을 보고 언어 판별 (기본값 java)
+		if (file.getName().endsWith(".py")) return "python";
+		if (file.getName().endsWith(".js")) return "javascript";
+		return "java";
+	}
+
+	private String getRunCommand(String lang, String dir, String file) {
+		return switch (lang.toLowerCase()) {
+			case "java" -> String.format("javac %s%s && java -cp %s %s",
+				dir, file, dir, file.replace(".java", ""));
+			case "python" -> String.format("python3 %s%s", dir, file);
+			case "javascript", "js" -> String.format("node %s%s", dir, file);
+			default -> "echo '지원하지 않는 언어입니다.'";
+		};
+	}
+
+	private String executeSsh(String command) {
 		JSch jsch = new JSch();
-		Session session = null;
-		ChannelExec channel = null;
 		StringBuilder output = new StringBuilder();
-
 		try {
-			// --- 2. SSH 키(Identity) 등록 ---
-			jsch.addIdentity(privateKeyPath);
-
-			// --- 3. 세션 설정 및 연결 ---
-			session = jsch.getSession(user, host, 22);
-
-			// 테스트 단계이므로 호스트 키 검사 생략
+			jsch.addIdentity(pemPath);
+			Session session = jsch.getSession(user, host, 22);
 			Properties config = new Properties();
 			config.put("StrictHostKeyChecking", "no");
 			session.setConfig(config);
+			session.connect(10000);
 
-			session.connect(10000); // 타임아웃 10초
-
-			// --- 4. 명령어 실행 채널 오픈 ---
-			channel = (ChannelExec) session.openChannel("exec");
+			ChannelExec channel = (ChannelExec) session.openChannel("exec");
 			channel.setCommand(command);
 
-			// 명령어 실행 결과 스트림 받기
 			InputStream in = channel.getInputStream();
-			InputStream err = channel.getErrStream(); // 에러 로그도 받기 위함
-
+			InputStream err = channel.getErrStream();
 			channel.connect();
 
-			// --- 5. 결과 읽기 (실시간 데이터 처리) ---
 			byte[] tmp = new byte[1024];
 			while (true) {
 				while (in.available() > 0) {
 					int i = in.read(tmp, 0, 1024);
-					if (i < 0) break;
 					output.append(new String(tmp, 0, i));
 				}
-				if (channel.isClosed()) {
-					if (in.available() > 0) continue;
-					break;
+				while (err.available() > 0) {
+					int i = err.read(tmp, 0, 1024);
+					output.append("[System Error] ").append(new String(tmp, 0, i));
 				}
-				Thread.sleep(100); // CPU 점유율 과부하 방지
+				if (channel.isClosed()) break;
+				Thread.sleep(100);
 			}
-
+			channel.disconnect();
+			session.disconnect();
 		} catch (Exception e) {
-			return "Execution Error: " + e.getMessage();
-		} finally {
-			if (channel != null) channel.disconnect();
-			if (session != null) session.disconnect();
+			log.error("SSH 실행 에러", e);
+			return "Error: " + e.getMessage();
 		}
-
 		return output.toString();
 	}
 }

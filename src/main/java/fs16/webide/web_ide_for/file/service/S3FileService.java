@@ -91,7 +91,7 @@ public class S3FileService {
      * @param containerFile The File entity
      * @return The S3 key
      */
-    private String generateS3Key(ContainerFile containerFile) {
+    public String generateS3Key(ContainerFile containerFile) {
         StringBuilder keyBuilder = new StringBuilder();
         keyBuilder.append(containerFile.getContainerId()).append("/");
 
