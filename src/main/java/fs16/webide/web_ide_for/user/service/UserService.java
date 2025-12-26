@@ -74,15 +74,18 @@ public class UserService {
         log.info("====updateUser=====");
         String firstName = Optional.ofNullable(data.get("first_name"))
                 .map(Object::toString)
+                .map(String::trim)
                 .orElse("");
 
         String lastName = Optional.ofNullable(data.get("last_name"))
                 .map(Object::toString)
+                .map(String::trim)
                 .orElse("");
 
         String name = (lastName + firstName).trim();
+
         if (name.isEmpty()) {
-            name = "사용자"; // 기본 이름
+            name = "사용자";
         }
         String profileImageUrl = data.getOrDefault("profile_image_url","").toString();
 
