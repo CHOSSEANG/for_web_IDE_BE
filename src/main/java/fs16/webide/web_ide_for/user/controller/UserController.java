@@ -29,7 +29,7 @@ public class UserController {
     @Operation(summary = "로그인/회원가입", description = "jwt 유효검사를 통해 신규 생성 및 조회를 합니다")
     @PostMapping("/login")
     public ApiResponse<UserResponse> login(@RequestHeader("Authorization") String authHeader) {
-        log.info("======login========={}",authHeader);
+        log.info("======login======={}",authHeader);
         return ApiResponse.success(UserResponse.success("login success"));
     }
 
