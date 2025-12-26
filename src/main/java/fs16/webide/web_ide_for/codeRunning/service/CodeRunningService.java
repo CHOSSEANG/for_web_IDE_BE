@@ -95,15 +95,20 @@ public class CodeRunningService {
 
 	private String determineLanguage(ContainerFile file) {
 		// 파일 확장자나 이름을 보고 언어 판별 (기본값 java)
-		if (file.getName().endsWith(".py")) return "python";
-		if (file.getName().endsWith(".js")) return "javascript";
-		return "java";
+		String name = file.getName().toLowerCase(); // 소문자로 변환하여 비교
+		if (name.endsWith(".py")) return "python";
+		if (name.endsWith(".js")) return "javascript";
+		if (name.endsWith(".java")) return "java";
+		return "java"; // 기본값
 	}
 
 	private String getRunCommand(String lang, String dir, String file) {
 		return switch (lang.toLowerCase()) {
-			case "java" -> String.format("javac %s && java %s",
-				 file, file.replace(".java", ""));
+			case "java" -> {
+				// .java 확장자를 확실히 제거한 클래스명 추출
+				String className = file.endsWith(".java") ? file.substring(0, file.lastIndexOf(".java")) : file;
+				yield String.format("javac %s && java %s", file, className);
+			}
 			case "python" -> String.format("python3 %s", file);
 			case "javascript", "js" -> String.format("node %s", file);
 			default -> "echo '지원하지 않는 언어입니다.'";
