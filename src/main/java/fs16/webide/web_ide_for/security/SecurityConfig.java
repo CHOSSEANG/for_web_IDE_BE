@@ -60,6 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("https://webicapp.com");
         // 모든 서브도메인 포함 https://www.webicapp.com 허용
         configuration.addAllowedOriginPattern("https://*.webicapp.com");
         // 모든 HTTP 메서드 허용
