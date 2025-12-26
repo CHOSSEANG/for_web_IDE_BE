@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CodeRunRequest {
-	private String containerId;
-	private Long fileId;
+public class CodeCommandRequest {
+	private String code;
 }

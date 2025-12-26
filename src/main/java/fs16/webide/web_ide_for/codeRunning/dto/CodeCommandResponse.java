@@ -1,13 +1,16 @@
 package fs16.webide.web_ide_for.codeRunning.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CodeRunRequest {
-	private String containerId;
-	private Long fileId;
+public class CodeCommandResponse {
+	private String output;
+	private boolean success;
+	private String errorMessage;
 }
