@@ -84,7 +84,6 @@ public class UserService {
 
     // webhook - 유저 업데이트(이름 변경 / 프로필 변경)
     public void updateUser(Long userId,Map<String,Object> data) {
-        log.info("====updateUser=====");
         String firstName = Optional.ofNullable(data.get("first_name"))
                 .map(Object::toString)
                 .map(String::trim)
