@@ -42,7 +42,7 @@ cloud:
 
 clerk:
   jwks-url: https://clerk.webicapp.com/.well-known/jwks.json
-  issuer: https://clerk.webicapp.com/
+  issuer: https://clerk.webicapp.com
   secret-key: ${CLERK_SECRET_KEY}
   webhook-secret-key: ${CLERK_WEBHOOK_SECRET_KEY}
 
