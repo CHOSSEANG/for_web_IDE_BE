@@ -1,6 +1,7 @@
 package fs16.webide.web_ide_for.codeRunning.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,7 +60,7 @@ public class CodeRunningController {
 	@GetMapping("/{userId}/{containerId}/{fileId}/run")
 	public ApiResponse<CodeRunResponse> runFile(
 		@Parameter(description = "사용자 고유 ID", example = "1")
-		@PathVariable Long userId,
+		@AuthenticationPrincipal Long userId,
 		@Parameter(description = "컨테이너 고유 ID", example = "15")
 		@PathVariable Long containerId,
 		@Parameter(description = "실행할 파일의 고유 ID (DB PK)", example = "30")
