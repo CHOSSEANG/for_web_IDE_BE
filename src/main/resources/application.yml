@@ -45,3 +45,9 @@ clerk:
   issuer: https://clerk.webicapp.com/
   secret-key: ${CLERK_SECRET_KEY}
   webhook-secret-key: ${CLERK_WEBHOOK_SECRET_KEY}
+
+
+ssh:
+  host: ${SSH_HOST}
+  user: ${SSH_USER}
+  pem-path: ${SSH_PEM_PATH}

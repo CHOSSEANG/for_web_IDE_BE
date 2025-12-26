@@ -40,9 +40,14 @@ public class CodeRunningService {
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucket;
 
-	private final String host = "ec2-13-239-107-76.ap-southeast-2.compute.amazonaws.com";
-	private final String user = "ubuntu";
-	private final String pemPath = "/Users/chosseang/Downloads/webic_code_server.pem";
+	@Value("${ssh.host}")
+	private String host;
+
+	@Value("${ssh.user}")
+	private String user;
+
+	@Value("${ssh.pem-path}")
+	private String pemPath;
 
 	/**
 	* [기존 로직] 단순 쉘 명령어 실행 (/code/command 용)
