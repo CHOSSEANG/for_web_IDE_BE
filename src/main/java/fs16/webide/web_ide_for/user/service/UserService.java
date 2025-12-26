@@ -72,8 +72,14 @@ public class UserService {
     // webhook - 유저 업데이트(이름 변경 / 프로필 변경)
     public void updateUser(Long userId,Map<String,Object> data) {
         log.info("====updateUser=====");
-        String firstName = data.getOrDefault("first_name","").toString();
-        String lastName = data.getOrDefault("last_name","").toString();
+        String firstName = Optional.ofNullable(data.get("first_name"))
+                .map(Object::toString)
+                .orElse("");
+
+        String lastName = Optional.ofNullable(data.get("last_name"))
+                .map(Object::toString)
+                .orElse("");
+
         String name = (lastName + firstName).trim();
         String profileImageUrl = data.getOrDefault("profile_image_url","").toString();
 
