@@ -24,6 +24,9 @@ public class ContainerCreateResponse {
 	@Schema(description = "컨테이너 이름", example = "My Container")
 	private String name;
 
+	@Schema(description = "컨테이너 언어", example = "java")
+	private String lang;
+
 	// 소유자 ID (User 객체 전체가 아닌 ID만 반환)
 	@Schema(description = "소유자 ID", example = "1")
 	private Long userId;
@@ -37,6 +40,7 @@ public class ContainerCreateResponse {
 		return ContainerCreateResponse.builder()
 			.id(container.getId())
 			.name(container.getName())
+			.lang(container.getLang())
 			.userId(container.getUser().getId())
 			.build();
 	}

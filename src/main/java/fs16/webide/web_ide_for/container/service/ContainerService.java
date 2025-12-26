@@ -66,6 +66,7 @@ public class ContainerService {
 		// 1. Container 엔티티 생성
 		Container newContainer = Container.builder()
 			.name(request.getName())
+			.lang(request.getLang())
 			.user(user) // 조회한 User 엔티티를 설정
 			.build();
 

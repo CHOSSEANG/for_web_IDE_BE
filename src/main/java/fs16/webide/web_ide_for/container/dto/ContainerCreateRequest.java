@@ -16,4 +16,7 @@ public class ContainerCreateRequest {
 	@Schema(description = "컨테이너 이름", example = "My Container")
 	private String name;
 
+	@Schema(description = "컨테이너 언어", example = "java")
+	private String lang;
+
 }

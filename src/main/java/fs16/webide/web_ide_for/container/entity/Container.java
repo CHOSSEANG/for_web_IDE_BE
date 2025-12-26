@@ -32,14 +32,18 @@ public class Container {
 	@Column(nullable = false, length = 100) // 컨테이너 이름은 필수값이므로 nullable = false, 길이 제한 권장
 	private String name;
 
+	@Column(nullable = true, length = 100)
+	private String lang;
+
 	@CreatedDate
 	@Column(updatable = false) // 생성 시간은 업데이트되지 않도록 설정
 	private LocalDateTime createdAt; // Java 8 Time API 사용 및 카멜 케이스
 
 	@Builder
-	public Container(User user, String name) {
+	public Container(User user, String name, String lang) {
 		this.user = user;
 		this.name = name;
+		this.lang = lang;
 		// created_at은 @CreatedDate가 자동 주입합니다.
 	}
 
