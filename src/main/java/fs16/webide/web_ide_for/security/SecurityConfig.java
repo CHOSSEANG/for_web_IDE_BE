@@ -63,6 +63,8 @@ public class SecurityConfig {
         configuration.addAllowedOrigin("https://webicapp.com");
         // 모든 서브도메인 포함 https://www.webicapp.com 허용
         configuration.addAllowedOriginPattern("https://*.webicapp.com");
+        // 로컬 개발 환경 허용
+        configuration.addAllowedOrigin("http://localhost:3000");
         // 모든 HTTP 메서드 허용
         configuration.addAllowedMethod("*");
         // 모든 헤더 허용 (Authorization 포함)

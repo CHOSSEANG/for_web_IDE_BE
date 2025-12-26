@@ -75,11 +75,13 @@ public class UserService {
         String firstName = Optional.ofNullable(data.get("first_name"))
                 .map(Object::toString)
                 .map(String::trim)
+                .filter(s -> !s.isEmpty())
                 .orElse("");
 
         String lastName = Optional.ofNullable(data.get("last_name"))
                 .map(Object::toString)
                 .map(String::trim)
+                .filter(s -> !s.isEmpty())
                 .orElse("");
 
         String name = (lastName + firstName).trim();
