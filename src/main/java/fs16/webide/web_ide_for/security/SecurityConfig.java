@@ -13,6 +13,11 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -21,46 +26,46 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOriginPattern("*");
-                    corsConfig.addAllowedMethod("*");
-                    corsConfig.addAllowedHeader("*");
-                    corsConfig.setAllowCredentials(true);
-                    return corsConfig;
-                }))
+                // ✅ CORS 설정: 실제 프론트 도메인 명시
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // 2. 인증 예외 발생 시 로그인 페이지 리다이렉트 방지
-                // SecurityConfig.java에 반드시 추가해야 할 부분
                 .exceptionHandling(exception -> exception
-                    // 인증되지 않은 사용자가 접근했을 때 리다이렉트(302) 대신 401이나 200을 던지도록 설정
-                    .authenticationEntryPoint((request, response, authException) -> {
-                        log.warn("인증 실패 또는 에러 발생 시 로그인 페이지 이동 차단: {}", request.getRequestURI());
-                        // 401 Unauthorized를 응답하거나, Web IDE 특성에 따라 403을 응답
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                    })
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.warn("인증 실패 또는 에러 발생 시 로그인 페이지 이동 차단: {}", request.getRequestURI());
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
                 )
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/error", "/favicon.ico").permitAll() // 에러 페이지 명시적 허용
-                    .requestMatchers("/health", "/health/**").permitAll()  // 추가!
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                    .anyRequest().permitAll()
+                        .requestMatchers("/error", "/favicon.ico").permitAll()
+                        .requestMatchers("/health", "/health/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
 
+    // ✅ CORS Configuration Bean
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("https://www.webicapp.com"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true); // 필수: Authorization 헤더를 브라우저가 전송하도록
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
