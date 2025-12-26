@@ -86,7 +86,7 @@ public class UserService {
 
         String name = (lastName + firstName).trim();
 
-        if (name.isEmpty()) {
+        if (name.isBlank() || name.equalsIgnoreCase("null")) {
             name = "사용자";
         }
         String profileImageUrl = data.getOrDefault("profile_image_url","").toString();
