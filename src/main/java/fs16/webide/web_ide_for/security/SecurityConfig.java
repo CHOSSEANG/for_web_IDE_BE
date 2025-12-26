@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                // ✅ CORS 설정: 실제 프론트 도메인 명시
+                // ✅ CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -56,14 +56,19 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS Configuration Bean
+    // ✅ CORS Configuration Bean (preflight 대응용 안전 버전)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://www.webicapp.com"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true); // 필수: Authorization 헤더를 브라우저가 전송하도록
+        // 모든 서브도메인 포함 https://www.webicapp.com 허용
+        configuration.addAllowedOriginPattern("https://*.webicapp.com");
+        // 모든 HTTP 메서드 허용
+        configuration.addAllowedMethod("*");
+        // 모든 헤더 허용 (Authorization 포함)
+        configuration.addAllowedHeader("*");
+        // 브라우저가 인증 헤더를 전송할 수 있도록 허용
+        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
