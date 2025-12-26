@@ -53,9 +53,9 @@ public class CodeRunningService {
 		return executeSsh(command);
 	}
 
-	public String runS3FileOnEc2(CodeRunRequest request, Long userId) {
+	public String runS3FileOnEc2(Long userId, Long containerId, Long fileId) {
 		// 1. DB에서 파일 조회
-		ContainerFile containerFile = fileRepository.findById(request.getFileId())
+		ContainerFile containerFile = fileRepository.findById(fileId)
 			.orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
 		// 2. S3 Key 생성 (S3FileService 로직 반영)

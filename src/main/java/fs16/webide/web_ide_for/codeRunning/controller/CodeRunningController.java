@@ -1,6 +1,7 @@
 package fs16.webide.web_ide_for.codeRunning.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fs16.webide.web_ide_for.codeRunning.dto.CodeCommandRequest;
 import fs16.webide.web_ide_for.codeRunning.dto.CodeCommandResponse;
-import fs16.webide.web_ide_for.codeRunning.dto.CodeRunRequest;
 import fs16.webide.web_ide_for.codeRunning.dto.CodeRunResponse;
 import fs16.webide.web_ide_for.codeRunning.service.CodeRunningService;
 import fs16.webide.web_ide_for.common.ApiResponse;
@@ -50,12 +50,12 @@ public class CodeRunningController {
 	}
 
 	// 신규 통합 실행 로직 (S3 -> EC2 -> Run -> Clean)
-	@PostMapping("/{userId}/run")
-	public ApiResponse<CodeRunResponse> runFile(@RequestBody CodeRunRequest request, @PathVariable Long userId) {
-		String result = codeRunningService.runS3FileOnEc2(request,userId);
+	@GetMapping("/{userId}/{containerId}/{fileId}/run")
+	public ApiResponse<CodeRunResponse> runFile(@PathVariable Long userId, @PathVariable Long containerId, @PathVariable Long fileId) {
+		String result = codeRunningService.runS3FileOnEc2(userId, containerId, fileId);
 
 		return ApiResponse.success(CodeRunResponse.builder()
-			.fileId(request.getFileId())
+			.fileId(fileId)
 			.result(result)
 			.success(!result.contains("[ERROR]"))
 			.build());
