@@ -57,7 +57,7 @@ public class CodeRunningController {
 
 	// 신규 통합 실행 로직 (S3 -> EC2 -> Run -> Clean)
 	@Operation(summary = "파일 기반 통합 실행 로직", description = "S3의 파일을 EC2로 가져와 언어별(Java, Python, JS) 환경에서 실행한 뒤 결과를 반환합니다.")
-	@GetMapping("/{userId}/{containerId}/{fileId}/run")
+	@GetMapping("/{containerId}/{fileId}/run")
 	public ApiResponse<CodeRunResponse> runFile(
 		@Parameter(description = "사용자 고유 ID", example = "1")
 		@AuthenticationPrincipal Long userId,
