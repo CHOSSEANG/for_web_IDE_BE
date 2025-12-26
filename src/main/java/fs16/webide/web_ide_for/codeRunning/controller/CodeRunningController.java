@@ -13,6 +13,9 @@ import fs16.webide.web_ide_for.codeRunning.dto.CodeCommandResponse;
 import fs16.webide.web_ide_for.codeRunning.dto.CodeRunResponse;
 import fs16.webide.web_ide_for.codeRunning.service.CodeRunningService;
 import fs16.webide.web_ide_for.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,10 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/code")
+@Tag(name = "코드 실행 API", description = "EC2 원격 서버에서 코드를 실행하고 결과를 반환하는 API입니다.")
 public class CodeRunningController {
 
 	private final CodeRunningService codeRunningService;
 
+	@Operation(summary = "단순 쉘 명령어 실행", description = "EC2 서버에 직접적인 쉘 명령어를 전달하고 결과를 출력합니다.")
 	@PostMapping("/command")
 	public ResponseEntity<CodeCommandResponse> runCode(@RequestBody CodeCommandRequest request) {
 		log.info("코드를 실행합니다: {}", request.getCode());
@@ -50,8 +55,15 @@ public class CodeRunningController {
 	}
 
 	// 신규 통합 실행 로직 (S3 -> EC2 -> Run -> Clean)
+	@Operation(summary = "파일 기반 통합 실행 로직", description = "S3의 파일을 EC2로 가져와 언어별(Java, Python, JS) 환경에서 실행한 뒤 결과를 반환합니다.")
 	@GetMapping("/{userId}/{containerId}/{fileId}/run")
-	public ApiResponse<CodeRunResponse> runFile(@PathVariable Long userId, @PathVariable Long containerId, @PathVariable Long fileId) {
+	public ApiResponse<CodeRunResponse> runFile(
+		@Parameter(description = "사용자 고유 ID", example = "1")
+		@PathVariable Long userId,
+		@Parameter(description = "컨테이너 고유 ID", example = "15")
+		@PathVariable Long containerId,
+		@Parameter(description = "실행할 파일의 고유 ID (DB PK)", example = "30")
+		@PathVariable Long fileId) {
 		String result = codeRunningService.runS3FileOnEc2(userId, containerId, fileId);
 
 		return ApiResponse.success(CodeRunResponse.builder()
