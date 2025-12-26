@@ -11,7 +11,9 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
 import fs16.webide.web_ide_for.codeRunning.dto.CodeRunRequest;
+import fs16.webide.web_ide_for.common.error.CoreException;
 import fs16.webide.web_ide_for.file.entity.ContainerFile;
+import fs16.webide.web_ide_for.file.error.FileErrorCode;
 import fs16.webide.web_ide_for.file.repository.FileRepository;
 import fs16.webide.web_ide_for.file.service.S3FileService;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +56,7 @@ public class CodeRunningService {
 	public String runS3FileOnEc2(CodeRunRequest request, Long userId) {
 		// 1. DB에서 파일 조회
 		ContainerFile containerFile = fileRepository.findById(request.getFileId())
-			.orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
+			.orElseThrow(() -> new CoreException(FileErrorCode.FILE_NOT_FOUND));
 
 		// 2. S3 Key 생성 (S3FileService 로직 반영)
 		String s3Key = generateS3Key(containerFile);
@@ -71,15 +73,17 @@ public class CodeRunningService {
 
 		// 5. 전체 실행 스크립트 구성
 		String fullCommand = String.format(
-			"mkdir -p %s && " +                 // 폴더 생성
-				"%s aws s3 cp s3://%s/%s %s%s && " + // S3에서 파일 복사 (키 주입)
-				"%s; " +                             // 코드 실행
-				"rm -rf %s",                         // 작업 완료 후 폴더 삭제
-			workDir, awsEnv, bucket, s3Key, workDir, fileName, runCmd, workDir
+			"mkdir -p %s && " +
+				"%s aws s3 cp s3://%s/%s %s%s --quiet && " + // --quiet 추가
+				"cd %s && %s; " +                            // 해당 디렉토리로 이동 후 실행
+				"cd ~ && rm -rf %s",                         // 상위로 이동 후 삭제
+			workDir, awsEnv, bucket, s3Key, workDir, fileName, workDir, runCmd, workDir
 		);
 
-		log.info("EC2 실행 요청 - User: {}, File: {}", userId, fileName);
-		return executeSsh(fullCommand);
+		log.info("EC2 실행 요청 (순수 결과 모드)");
+		String rawOutput = executeSsh(fullCommand);
+
+		return rawOutput.trim();
 	}
 
 	// 기존 S3FileService.java의 로직 그대로 구현
@@ -98,10 +102,10 @@ public class CodeRunningService {
 
 	private String getRunCommand(String lang, String dir, String file) {
 		return switch (lang.toLowerCase()) {
-			case "java" -> String.format("javac %s%s && java -cp %s %s",
-				dir, file, dir, file.replace(".java", ""));
-			case "python" -> String.format("python3 %s%s", dir, file);
-			case "javascript", "js" -> String.format("node %s%s", dir, file);
+			case "java" -> String.format("javac %s && java %s",
+				 file, file.replace(".java", ""));
+			case "python" -> String.format("python3 %s", file);
+			case "javascript", "js" -> String.format("node %s", file);
 			default -> "echo '지원하지 않는 언어입니다.'";
 		};
 	}
