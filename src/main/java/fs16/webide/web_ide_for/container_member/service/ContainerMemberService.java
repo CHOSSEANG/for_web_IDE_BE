@@ -32,9 +32,7 @@ public class ContainerMemberService {
 
     // 초대
     public void invitedMembers(Long containerId, List<String> userIds){
-        log.info("===========invitedMembers");
-        log.info("===========containerId=={}",containerId);
-        log.info("===========userIds=={}",userIds);
+
         Container container = containerRepository.findById(containerId)
                 .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
         Set<String> invitedClerkIds = new HashSet<>(containerMemberRepository.findClerkIdsByContainerId(containerId));
