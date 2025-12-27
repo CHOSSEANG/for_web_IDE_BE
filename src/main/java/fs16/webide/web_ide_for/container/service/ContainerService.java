@@ -9,6 +9,9 @@ import java.util.NoSuchElementException;
 import fs16.webide.web_ide_for.container_member.entity.ContainerMember;
 import fs16.webide.web_ide_for.container_member.repository.ContainerMemberRepository;
 import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fs16.webide.web_ide_for.common.error.CoreException;
@@ -80,6 +83,16 @@ public class ContainerService {
 		return saveContainer;
 	}
 
+	/**
+	 * 사용자의 컨테이너 목록을 페이징하여 조회합니다.
+	 *
+	 * @param userId 사용자 ID
+	 * @param pageable 페이징 정보
+	 * @return 페이징된 컨테이너 목록
+	 */
+	public Page<Container> findContainersByUser(Long userId, Pageable pageable) {
+		return containerRepository.findContainersByUserId(userId, pageable);
+	}
 
 
 	/**
