@@ -65,6 +65,7 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://*.webicapp.com");
         // 로컬 개발 환경 허용
         configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("http://127.0.0.1:3000");
         // 모든 HTTP 메서드 허용
         configuration.addAllowedMethod("*");
         // 모든 헤더 허용 (Authorization 포함)
