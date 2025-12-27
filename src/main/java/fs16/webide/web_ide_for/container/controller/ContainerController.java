@@ -3,17 +3,14 @@ package fs16.webide.web_ide_for.container.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import fs16.webide.web_ide_for.container.dto.*;
-import fs16.webide.web_ide_for.container_member.dto.MemberInviteRequest;
-import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
-import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
-import fs16.webide.web_ide_for.user.entity.User;
-import fs16.webide.web_ide_for.user.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,8 +19,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fs16.webide.web_ide_for.common.ApiResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerCreateRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerCreateResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerDeleteRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerDeleteResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerFindRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerFindResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerListRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerListResponse;
+import fs16.webide.web_ide_for.container.dto.ContainerUpdateRequest;
+import fs16.webide.web_ide_for.container.dto.ContainerUpdateResponse;
 import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.container.service.ContainerService;
+import fs16.webide.web_ide_for.container_member.dto.MemberInviteRequest;
+import fs16.webide.web_ide_for.container_member.service.ContainerMemberService;
+import fs16.webide.web_ide_for.user.dto.UserInfoResponse;
+import fs16.webide.web_ide_for.user.entity.User;
+import fs16.webide.web_ide_for.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,17 +68,41 @@ public class ContainerController {
     }
 
     /**
-     * 특정 사용자의 모든 컨테이너를 조회합니다.
-     * 
-     * @param userId 컨테이너 목록을 조회할 사용자의 ID
-     * @return 사용자가 소유한 컨테이너 목록
+     * 특정 사용자의 모든 컨테이너를 페이징하여 조회합니다.
+     *
+     * @param userId 인증된 사용자 ID
+     * @param request 페이징 요청 정보
+     * @return 페이징된 컨테이너 목록
      */
-    @Operation(summary = "컨테이너 목록 조회", description = "특정 사용자의 모든 컨테이너를 조회합니다")
+    @Operation(summary = "컨테이너 목록 조회 (페이징)",
+        description = "특정 사용자의 모든 컨테이너를 페이징하여 조회합니다")
     @GetMapping("/list")
     public ApiResponse<List<ContainerListResponse>> findAllContainers(@AuthenticationPrincipal Long userId) {
         log.info("Container list request received for user ID: {}", userId);
         List<Container> containers = containerMemberService.findContainersByUser(userId);
         return ApiResponse.success(ContainerListResponse.fromList(containers));
+    public ApiResponse<ContainerListResponse> findAllContainers(
+        @AuthenticationPrincipal Long userId,
+        @ModelAttribute ContainerListRequest request) {
+
+        log.info("Container list request - userId: {}, page: {}, size: {}, sortBy: {}, sortDirection: {}",
+            userId, request.getPage(), request.getSize(), request.getSortBy(),
+            request.getSortDirection());  // keyword 제거됨
+
+
+        Sort.Direction direction = request.getSortDirection().equalsIgnoreCase("DESC")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(
+            request.getPage(),
+            request.getSize(),
+            Sort.by(direction, request.getSortBy())
+        );
+
+        Page<Container> containerPage = containerService.findContainersByUser(userId, pageable);
+
+        return ApiResponse.success(ContainerListResponse.from(containerPage));
     }
 
     /**
