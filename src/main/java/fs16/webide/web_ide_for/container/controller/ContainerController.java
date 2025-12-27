@@ -77,10 +77,6 @@ public class ContainerController {
     @Operation(summary = "컨테이너 목록 조회 (페이징)",
         description = "특정 사용자의 모든 컨테이너를 페이징하여 조회합니다")
     @GetMapping("/list")
-    public ApiResponse<List<ContainerListResponse>> findAllContainers(@AuthenticationPrincipal Long userId) {
-        log.info("Container list request received for user ID: {}", userId);
-        List<Container> containers = containerMemberService.findContainersByUser(userId);
-        return ApiResponse.success(ContainerListResponse.fromList(containers));
     public ApiResponse<ContainerListResponse> findAllContainers(
         @AuthenticationPrincipal Long userId,
         @ModelAttribute ContainerListRequest request) {
