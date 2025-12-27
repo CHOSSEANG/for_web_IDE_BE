@@ -42,8 +42,9 @@ public class ChatController {
         UserInfoResponse userInfoResponse = userService.getUserInfo(userId);
 
         ChatResponse response = new ChatResponse(
+                userId,
                 userInfoResponse.getUserName(),
-                userInfoResponse.getImageUrl(),
+                userInfoResponse.getUserImgUrl(),
                 msg.getMessage(),
                 LocalDateTime.now()
         );

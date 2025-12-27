@@ -40,6 +40,7 @@ public class ChatService {
         );
         Collections.reverse(chats);
         return chats.stream().map(chat -> new ChatResponse(
+                chat.getSender().getId(),
                 chat.getSender().getName(),
                 chat.getSender().getProfileImageUrl(),
                 chat.getMessage(),
@@ -73,6 +74,7 @@ public class ChatService {
         List<Chat> chats = chatRepository.searchChat(containerId, keyword);
         Collections.reverse(chats);
         return chats.stream().map(chat -> new ChatResponse(
+                chat.getSender().getId(),
                 chat.getSender().getName(),
                 chat.getSender().getProfileImageUrl(),
                 chat.getMessage(),

@@ -10,6 +10,7 @@ import fs16.webide.web_ide_for.user.entity.User;
 import fs16.webide.web_ide_for.user.error.UserErrorCode;
 import fs16.webide.web_ide_for.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Set;
 
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -29,15 +31,18 @@ public class ContainerMemberService {
     private final UserRepository userRepository;
 
     // 초대
-    public void invitedMembers(Long containerId, List<Long> userIds){
+    public void invitedMembers(Long containerId, List<String> userIds){
+        log.info("===========invitedMembers");
+        log.info("===========containerId=={}",containerId);
+        log.info("===========userIds=={}",userIds);
         Container container = containerRepository.findById(containerId)
                 .orElseThrow(() -> new CoreException(ContainerErrorCode.CONTAINER_NOT_FOUND));
-        Set<Long> invitedUserIds = new HashSet<>(containerMemberRepository.findUserIdsByContainerId(containerId));
+        Set<String> invitedClerkIds = new HashSet<>(containerMemberRepository.findClerkIdsByContainerId(containerId));
 
-        List<Long> newIds = userIds.stream()
-                .filter(id -> !invitedUserIds.contains(id))
+        List<String> newIds = userIds.stream()
+                .filter(id -> !invitedClerkIds.contains(id))
                 .toList();
-        List<User> users = userRepository.findAllById(newIds);
+        List<User> users = userRepository.findAllByClerkIdIn(newIds);
         if (newIds.size() != users.size()) throw new CoreException(UserErrorCode.USER_NOT_FOUND);
 
         if(users.isEmpty()){

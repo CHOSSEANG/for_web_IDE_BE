@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatResponse {
+    private Long userId;
     private String userName;
     private String userImgUrl;
     private String message;

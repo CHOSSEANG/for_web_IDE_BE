@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             AND u.status = 'Y'
             """)
     List<User> searchNameOrClerkId(@Param("keyword")String keyword);
+
+    List<User> findAllByClerkIdIn(List<String> keyword);
 }

@@ -11,6 +11,9 @@ import java.util.List;
 
 public interface ContainerMemberRepository extends JpaRepository<ContainerMember, Long>  {
 
+    @Query("SELECT cm.user.clerkId FROM ContainerMember cm WHERE cm.container.id = :containerId")
+    List<String> findClerkIdsByContainerId(@Param("containerId") Long containerId);
+
     @Query("SELECT cm.user.id FROM ContainerMember cm WHERE cm.container.id = :containerId")
     List<Long> findUserIdsByContainerId(@Param("containerId") Long containerId);
 
@@ -20,7 +23,7 @@ public interface ContainerMemberRepository extends JpaRepository<ContainerMember
 
     void deleteByContainerId(Long containerId);
 
-    @Query("SELECT cm.user FROM ContainerMember cm WHERE cm.container.id = :containerId")
+    @Query("SELECT u FROM ContainerMember cm JOIN cm.user u WHERE cm.container.id = :containerId")
     List<User> findUsersByContainerId(@Param("containerId") Long containerId);
 
     void deleteAllByUser(User user);
