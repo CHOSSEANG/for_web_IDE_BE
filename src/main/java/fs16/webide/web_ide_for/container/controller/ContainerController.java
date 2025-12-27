@@ -79,7 +79,8 @@ public class ContainerController {
     @GetMapping("/list")
     public ApiResponse<ContainerListResponse> findAllContainers(
         @AuthenticationPrincipal Long userId,
-        @ModelAttribute ContainerListRequest request) {
+        @ModelAttribute ContainerListRequest request,
+        Pageable pageable) {
 
         log.info("Container list request - userId: {}, page: {}, size: {}, sortBy: {}, sortDirection: {}",
             userId, request.getPage(), request.getSize(), request.getSortBy(),
@@ -89,12 +90,6 @@ public class ContainerController {
         Sort.Direction direction = request.getSortDirection().equalsIgnoreCase("DESC")
             ? Sort.Direction.DESC
             : Sort.Direction.ASC;
-
-        Pageable pageable = PageRequest.of(
-            request.getPage(),
-            request.getSize(),
-            Sort.by(direction, request.getSortBy())
-        );
 
         Page<Container> containerPage = containerService.findContainersByUser(userId, pageable);
 
