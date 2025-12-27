@@ -12,7 +12,7 @@ public class UserSearchResponse {
     private Long userId;
     private String clerkId;
     private String name;
-    private String profileImageUrl;
+    private String imageUrl;
     private boolean invited;
 
 }
