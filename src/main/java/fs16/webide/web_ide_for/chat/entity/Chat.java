@@ -4,7 +4,7 @@ import fs16.webide.web_ide_for.container.entity.Container;
 import fs16.webide.web_ide_for.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -30,8 +30,14 @@ public class Chat {
     @Column(nullable = false,length = 1000)
     private String message;
 
-    @CreationTimestamp
+
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
