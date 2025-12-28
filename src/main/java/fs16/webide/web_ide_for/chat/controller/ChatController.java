@@ -34,7 +34,7 @@ public class ChatController {
     public List<ChatResponse> chatList(
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
-
+        log.info("chat??????");
         LocalDateTime lastCreatedAtTime = null;
         try {
             if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
@@ -44,7 +44,7 @@ public class ChatController {
         } catch (Exception e) {
             log.warn("lastCreatedAt 파싱 실패, 기본값 null 사용: {}", lastCreatedAt);
         }
-
+        log.info("lastCreatedAtTime??????{}",lastCreatedAtTime);
         return chatService.chatList(containerId, lastCreatedAtTime);
     }
 
