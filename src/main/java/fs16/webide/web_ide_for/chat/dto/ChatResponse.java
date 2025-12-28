@@ -5,8 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
@@ -22,10 +21,10 @@ public class ChatResponse {
     // 엔티티 Chat -> DTO
     public static ChatResponse fromEntity(Chat chat) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedCreatedAt = chat.getCreatedAt()
-                .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                .toLocalDateTime()
-                .format(formatter);
+
+        // LocalDateTime을 바로 포맷, DB에 저장된 시간은 이미 LocalDateTime 기준
+        LocalDateTime createdAtKST = chat.getCreatedAt(); // DB에 LocalDateTime 저장
+        String formattedCreatedAt = createdAtKST.format(formatter);
 
         return new ChatResponse(
                 chat.getSender().getId(),

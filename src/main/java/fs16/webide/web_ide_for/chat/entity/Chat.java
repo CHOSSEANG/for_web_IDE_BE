@@ -8,7 +8,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 @Builder
 @Entity
@@ -35,7 +34,5 @@ public class Chat {
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
-    private OffsetDateTime createdAt;
-
-
+    private LocalDateTime createdAt; // OffsetDateTime → LocalDateTime으로 변경
 }

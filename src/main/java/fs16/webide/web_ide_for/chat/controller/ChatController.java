@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class ChatController {
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
 
-        OffsetDateTime lastCreatedAtTime;
+        LocalDateTime lastCreatedAtTime;
 
         try {
             if (lastCreatedAt == null || lastCreatedAt.isEmpty()) {
@@ -44,8 +43,7 @@ public class ChatController {
             } else {
                 // 프론트에서 보내는 "yyyy-MM-dd HH:mm:ss" 포맷 파싱
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
-                        .atOffset(ZoneOffset.UTC); // UTC 기준으로 변환
+                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter);
             }
         } catch (Exception e) {
             log.warn("lastCreatedAt 파싱 실패, 기본값 null 사용: {}", lastCreatedAt);
@@ -61,15 +59,15 @@ public class ChatController {
         Long userId = Long.valueOf(principal.getName());
         UserInfoResponse userInfo = userService.getUserInfo(userId);
 
-        // 한국 시간 기준 OffsetDateTime 생성
-        OffsetDateTime nowKST = OffsetDateTime.now(ZoneOffset.ofHours(9));
+        // 한국 시간 기준 LocalDateTime 생성
+        LocalDateTime nowKST = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         ChatResponse response = new ChatResponse(
                 userId,
                 userInfo.getUserName(),
                 userInfo.getUserImgUrl(),
                 msg.getMessage(),
-                nowKST.toString() // 한국 시간 문자열
+                nowKST.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) // 문자열로 한국 시간 전달
         );
 
         chatService.saveMessageAsync(containerId, userId, msg.getMessage());

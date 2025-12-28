@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
@@ -23,8 +23,8 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         """)
     List<Chat> getChatList(
             @Param("containerId") Long containerId,
-            @Param("lastCreatedAt") OffsetDateTime lastCreatedAt,
-            @Param("oneWeekAgo") OffsetDateTime oneWeekAgo,
+            @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
+            @Param("oneWeekAgo") LocalDateTime oneWeekAgo,
             Pageable pageable
     );
 

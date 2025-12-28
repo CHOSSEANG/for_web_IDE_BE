@@ -12,8 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,9 +32,9 @@ public class ChatService {
     }
 
     // 7일간 채팅 조회
-    public List<ChatResponse> chatList(Long containerId, OffsetDateTime lastCreatedAt) {
+    public List<ChatResponse> chatList(Long containerId, LocalDateTime lastCreatedAt) {
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE);
-        OffsetDateTime oneWeekAgo = OffsetDateTime.now(ZoneOffset.UTC).minusDays(7);
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
 
         List<Chat> chats = chatRepository.getChatList(containerId, lastCreatedAt, oneWeekAgo, pageable);
         Collections.reverse(chats);
