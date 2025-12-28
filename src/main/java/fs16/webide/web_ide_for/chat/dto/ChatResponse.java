@@ -4,12 +4,14 @@ import fs16.webide.web_ide_for.chat.entity.Chat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,7 +28,7 @@ public class ChatResponse {
                 .withZoneSameInstant(kstZone);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+        log.info("date????{}",chat.getCreatedAt().format(formatter));
         return new ChatResponse(
                 chat.getSender().getClerkId(),
                 chat.getSender().getName(),

@@ -34,7 +34,7 @@ public class ChatController {
     public List<ChatResponse> chatList(
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
-        log.info("바꿈??????");
+        log.info("change??????");
         LocalDateTime lastCreatedAtTime = null;
         try {
             if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
@@ -60,7 +60,7 @@ public class ChatController {
         chatService.saveMessageAsync(containerId, userId, nowKST, msg.getMessage());
 
         ChatResponse response = new ChatResponse(
-                userId,
+                userInfo.getClerkId(),
                 userInfo.getUserName(),
                 userInfo.getUserImgUrl(),
                 msg.getMessage(),
