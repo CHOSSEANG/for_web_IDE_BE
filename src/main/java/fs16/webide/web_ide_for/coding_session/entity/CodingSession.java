@@ -18,7 +18,7 @@ public class CodingSession {
     private Long userId;
     @Column(name = "container_id")
     private Long containerId;
-    @Column(name = "coding_time_ms", nullable = false)
+    @Column(name = "coding_time_ms")
     private Long codingTimeMs;
     @Column(name = "record_date")
     private LocalDate recordDate;
