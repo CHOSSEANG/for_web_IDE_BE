@@ -5,12 +5,14 @@ import fs16.webide.web_ide_for.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Builder
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,7 +34,7 @@ public class Chat {
     private String message;
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(updatable = false, nullable = false)
     private OffsetDateTime createdAt;
 
 
