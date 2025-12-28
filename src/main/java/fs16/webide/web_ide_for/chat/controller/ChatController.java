@@ -36,12 +36,20 @@ public class ChatController {
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
 
-        OffsetDateTime lastCreatedAtTime = null;
-        if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
-            // 프론트가 보내는 "yyyy-MM-dd HH:mm:ss" 형태 파싱
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
-                    .atOffset(ZoneOffset.UTC); // UTC 기준으로 변환
+        OffsetDateTime lastCreatedAtTime;
+
+        try {
+            if (lastCreatedAt == null || lastCreatedAt.isEmpty()) {
+                lastCreatedAtTime = null; // 첫 조회라면 null 처리
+            } else {
+                // 프론트에서 보내는 "yyyy-MM-dd HH:mm:ss" 포맷 파싱
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
+                        .atOffset(ZoneOffset.UTC); // UTC 기준으로 변환
+            }
+        } catch (Exception e) {
+            log.warn("lastCreatedAt 파싱 실패, 기본값 null 사용: {}", lastCreatedAt);
+            lastCreatedAtTime = null;
         }
 
         return chatService.chatList(containerId, lastCreatedAtTime);
