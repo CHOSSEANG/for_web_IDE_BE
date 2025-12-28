@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatResponse {
-    private Long userId;
+    private String userId;
     private String userName;
     private String userImgUrl;
     private String message;
@@ -22,7 +22,7 @@ public class ChatResponse {
     public static ChatResponse fromEntity(Chat chat) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return new ChatResponse(
-                chat.getSender().getId(),
+                chat.getSender().getClerkId(),
                 chat.getSender().getName(),
                 chat.getSender().getProfileImageUrl(),
                 chat.getMessage(),
