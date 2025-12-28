@@ -46,6 +46,7 @@ public class ChatService {
     }
 
     // 채팅 저장
+    @Transactional
     @Async
     public void saveMessageAsync(Long containerId, Long userId, String message) {
         try {
