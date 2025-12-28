@@ -15,8 +15,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Tag(name = "Chat", description = "채팅 API")
@@ -29,11 +31,20 @@ public class ChatController {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final UserService userService;
 
-    @Operation(summary = "채팅 조회", description = "7일 기간의 채팅을 조회합니다")
     @GetMapping("/chat")
-    public List<ChatResponse> chatList(@RequestParam("containerId") Long containerId,
-                                       @RequestParam(required = false) OffsetDateTime lastCreatedAt) {
-        return chatService.chatList(containerId, lastCreatedAt);
+    public List<ChatResponse> chatList(
+            @RequestParam("containerId") Long containerId,
+            @RequestParam(required = false) String lastCreatedAt) {
+
+        OffsetDateTime lastCreatedAtTime = null;
+        if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
+            // 프론트가 보내는 "yyyy-MM-dd HH:mm:ss" 형태 파싱
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
+                    .atOffset(ZoneOffset.UTC); // UTC 기준으로 변환
+        }
+
+        return chatService.chatList(containerId, lastCreatedAtTime);
     }
 
     @Operation(summary = "채팅 전송", description = "실시간으로 채팅을 보냅니다")
