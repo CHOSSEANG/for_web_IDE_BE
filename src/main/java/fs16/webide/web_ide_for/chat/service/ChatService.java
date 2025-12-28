@@ -31,18 +31,18 @@ public class ChatService {
         this.userRepository = userRepository;
     }
 
-    // 7일간 채팅 조회
     public List<ChatResponse> chatList(Long containerId, LocalDateTime lastCreatedAt) {
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE);
         LocalDateTime oneWeekAgo = LocalDateTime.now(); // KST 기준
 
         List<Chat> chats = chatRepository.getChatList(containerId, lastCreatedAt, oneWeekAgo, pageable);
-        Collections.reverse(chats);
-
+        Collections.reverse(chats); // 최신 메시지 아래로
+        log.info("chat?{}",chats);
         return chats.stream()
                 .map(ChatResponse::fromEntity)
                 .toList();
     }
+
 
     // 채팅 저장
     @Transactional
