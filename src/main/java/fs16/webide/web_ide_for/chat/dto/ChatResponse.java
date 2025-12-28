@@ -18,14 +18,9 @@ public class ChatResponse {
     private String message;
     private String createdAt; // 한국 시간 문자열
 
-    // 엔티티 Chat -> DTO 변환
     public static ChatResponse fromEntity(Chat chat) {
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        // ❗ 변환 절대 하지 말 것
-        String formattedCreatedAt =
-                chat.getCreatedAt().format(formatter);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedCreatedAt = chat.getCreatedAt().format(formatter); // 변환 없이 포맷만
 
         return new ChatResponse(
                 chat.getSender().getId(),
@@ -35,4 +30,5 @@ public class ChatResponse {
                 formattedCreatedAt
         );
     }
+
 }

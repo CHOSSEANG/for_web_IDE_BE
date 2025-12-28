@@ -35,22 +35,14 @@ public class ChatController {
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
 
-        LocalDateTime lastCreatedAtTime;
-
+        LocalDateTime lastCreatedAtTime = null;
         try {
-            if (lastCreatedAt == null || lastCreatedAt.isEmpty()) {
-                lastCreatedAtTime = null;
-            } else {
+            if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                // 프론트에서 보내는 문자열을 KST -> UTC 변환
-                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
-                        .atZone(ZoneId.of("Asia/Seoul"))
-                        .withZoneSameInstant(ZoneId.of("UTC"))
-                        .toLocalDateTime();
+                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter); // 변환 X
             }
         } catch (Exception e) {
             log.warn("lastCreatedAt 파싱 실패, 기본값 null 사용: {}", lastCreatedAt);
-            lastCreatedAtTime = null;
         }
 
         return chatService.chatList(containerId, lastCreatedAtTime);
