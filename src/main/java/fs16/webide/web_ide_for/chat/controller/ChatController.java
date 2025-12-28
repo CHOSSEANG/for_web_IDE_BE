@@ -34,7 +34,7 @@ public class ChatController {
     public List<ChatResponse> chatList(
             @RequestParam("containerId") Long containerId,
             @RequestParam(required = false) String lastCreatedAt) {
-        log.info("chat??????");
+        log.info("바꿈??????");
         LocalDateTime lastCreatedAtTime = null;
         try {
             if (lastCreatedAt != null && !lastCreatedAt.isEmpty()) {
