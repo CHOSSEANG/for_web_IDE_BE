@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
@@ -20,7 +21,12 @@ public class ChatResponse {
     private String createdAt; // 한국 시간 문자열
 
     public static ChatResponse fromEntity(Chat chat) {
+        ZoneId kstZone = ZoneId.of("Asia/Seoul");
+        ZonedDateTime kstTime = chat.getCreatedAt().atZone(ZoneId.systemDefault())
+                .withZoneSameInstant(kstZone);
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         return new ChatResponse(
                 chat.getSender().getClerkId(),
                 chat.getSender().getName(),

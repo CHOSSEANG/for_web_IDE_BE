@@ -183,6 +183,7 @@ public class UserService {
             }
 
             return new UserInfoResponse(
+                    user.getClerkId(),
                     user.getName(),
                     user.getProfileImageUrl()
             );

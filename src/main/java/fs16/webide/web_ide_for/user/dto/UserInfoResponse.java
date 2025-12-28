@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserInfoResponse {
+    private String clerkId;
     private String userName;
     private String userImgUrl;
 }
