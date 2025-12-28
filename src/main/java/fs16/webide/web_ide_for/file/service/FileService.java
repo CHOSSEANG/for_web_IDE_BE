@@ -219,19 +219,22 @@ public class FileService {
 
         String oldPath = containerFile.getPath();
         boolean isNameChanged = requestDto.getNewName() != null && !requestDto.getNewName().equals(containerFile.getName());
-
         // 2. 파일 이름 및 경로 수정
-        if (isNameChanged) {
-            containerFile.setName(requestDto.getNewName());
+        if (requestDto.getNewName() != null) {
+            String newName = requestDto.getNewName();
+
+            containerFile.setName(newName);
+
             // 부모 경로를 유지하면서 이름만 변경하여 새로운 path 생성
-            String newPath = updatePath(containerFile.getParent(), requestDto.getNewName());
+            String newPath = updatePath(containerFile.getParent(), newName);
             containerFile.setPath(newPath);
 
             // 확장자 추출 로직 (필요 시)
-            if (!containerFile.getIsDirectory() && requestDto.getNewName().contains(".")) {
-                containerFile.setExtension(requestDto.getNewName().substring(requestDto.getNewName().lastIndexOf(".") + 1));
+            if (!containerFile.getIsDirectory() && newName.contains(".")) {
+                containerFile.setExtension(
+                        newName.substring(newName.lastIndexOf(".") + 1)
+                );
             }
-
             // S3 이름 변경 적용
             s3FileService.renameFileInS3(oldPath, containerFile);
         }
