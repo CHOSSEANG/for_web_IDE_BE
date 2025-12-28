@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,11 +34,13 @@ public class ChatService {
 
     public List<ChatResponse> chatList(Long containerId, LocalDateTime lastCreatedAt) {
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE);
-        LocalDateTime oneWeekAgo = LocalDateTime.now(); // KST 기준
+        // KST 기준 7일 전
+        LocalDateTime oneWeekAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusDays(7);
 
         List<Chat> chats = chatRepository.getChatList(containerId, lastCreatedAt, oneWeekAgo, pageable);
         Collections.reverse(chats); // 최신 메시지 아래로
-        log.info("chat?{}",chats);
+        log.info("chat?{}", chats);
+
         return chats.stream()
                 .map(ChatResponse::fromEntity)
                 .toList();
