@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +34,7 @@ public class ChatService {
     // 7일간 채팅 조회
     public List<ChatResponse> chatList(Long containerId, LocalDateTime lastCreatedAt) {
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE);
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        LocalDateTime oneWeekAgo = LocalDateTime.now(); // KST 기준
 
         List<Chat> chats = chatRepository.getChatList(containerId, lastCreatedAt, oneWeekAgo, pageable);
         Collections.reverse(chats);
@@ -50,17 +49,11 @@ public class ChatService {
     @Async
     public void saveMessageAsync(Long containerId, Long userId, LocalDateTime kstTime, String message) {
         try {
-            // KST 시간 -> UTC로 변환 후 DB 저장
-            LocalDateTime utcTime = kstTime
-                    .atZone(ZoneId.of("Asia/Seoul"))
-                    .withZoneSameInstant(ZoneId.of("UTC"))
-                    .toLocalDateTime();
-
             Chat chat = Chat.builder()
                     .container(containerRepository.getReferenceById(containerId))
                     .sender(userRepository.getReferenceById(userId))
                     .message(message)
-                    .createdAt(utcTime) // DB 저장은 UTC
+                    .createdAt(kstTime) // DB 저장도 KST 그대로
                     .build();
             chatRepository.save(chat);
         } catch (Exception e) {
