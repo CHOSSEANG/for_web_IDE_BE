@@ -36,7 +36,7 @@ public class ChatService {
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE);
         // KST 기준 7일 전
         LocalDateTime oneWeekAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusDays(7);
-
+        log.info(" 7일 전?");
         List<Chat> chats = chatRepository.getChatList(containerId, lastCreatedAt, oneWeekAgo, pageable);
         Collections.reverse(chats); // 최신 메시지 아래로
         log.info("chat?{}", chats);
