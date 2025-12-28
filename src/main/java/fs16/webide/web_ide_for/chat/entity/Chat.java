@@ -32,7 +32,7 @@ public class Chat {
     private String message;
 
     @CreatedDate
-    @Column(updatable = false, nullable = false)
+    @Column(updatable = false)
     private OffsetDateTime createdAt;
 
 
