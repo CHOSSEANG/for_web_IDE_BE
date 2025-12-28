@@ -20,6 +20,9 @@ spring:
       hibernate:
         format_sql: true
 
+  jackson:
+    time-zone: UTC
+
   server:
     port: 8080
     address: 0.0.0.0
