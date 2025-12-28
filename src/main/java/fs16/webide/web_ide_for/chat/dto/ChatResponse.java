@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Getter
@@ -19,16 +18,14 @@ public class ChatResponse {
     private String message;
     private String createdAt; // 한국 시간 문자열
 
+    // 엔티티 Chat -> DTO 변환
     public static ChatResponse fromEntity(Chat chat) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        // DB에 저장된 UTC LocalDateTime -> KST로 변환
-        LocalDateTime createdAt = chat.getCreatedAt();
-        String formattedCreatedAt = createdAt
-                .atZone(ZoneId.of("UTC"))
-                .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                .toLocalDateTime()
-                .format(formatter);
+        // ❗ 변환 절대 하지 말 것
+        String formattedCreatedAt =
+                chat.getCreatedAt().format(formatter);
 
         return new ChatResponse(
                 chat.getSender().getId(),
