@@ -6,12 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
-    // 채팅 메세지 보여주기
+    // 채팅 메세지 조회 (페이징)
     @Query("""
             SELECT c
             FROM Chat c
@@ -23,16 +23,16 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         """)
     List<Chat> getChatList(
             @Param("containerId") Long containerId,
-            @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
-            @Param("oneWeekAgo") LocalDateTime oneWeekAgo,
+            @Param("lastCreatedAt") OffsetDateTime lastCreatedAt,
+            @Param("oneWeekAgo") OffsetDateTime oneWeekAgo,
             Pageable pageable
     );
 
-    // 채팅 검색 구현
+    // 채팅 검색
     @Query("""
             SELECT c
             FROM Chat c
-            JOIN c.sender s
+            JOIN FETCH c.sender s
             WHERE c.container.id = :containerId
               AND (:keyword IS NULL OR c.message LIKE %:keyword%)
             ORDER BY c.createdAt DESC
@@ -41,5 +41,4 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             @Param("containerId") Long containerId,
             @Param("keyword") String keyword
     );
-
 }

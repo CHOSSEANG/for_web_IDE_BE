@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Builder
 @Entity
@@ -30,14 +31,9 @@ public class Chat {
     @Column(nullable = false,length = 1000)
     private String message;
 
-
     @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    @Column(updatable = false, nullable = false)
+    private OffsetDateTime createdAt;
 
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }
