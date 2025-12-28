@@ -19,9 +19,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
 
   jackson:
-    time-zone: UTC
+    time-zone: Asia/Seoul
 
   server:
     port: 8080
