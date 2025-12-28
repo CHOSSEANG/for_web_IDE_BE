@@ -39,11 +39,14 @@ public class ChatController {
 
         try {
             if (lastCreatedAt == null || lastCreatedAt.isEmpty()) {
-                lastCreatedAtTime = null; // 첫 조회라면 null 처리
+                lastCreatedAtTime = null;
             } else {
-                // 프론트에서 보내는 "yyyy-MM-dd HH:mm:ss" 포맷 파싱
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter);
+                // 프론트에서 보내는 문자열을 KST -> UTC 변환
+                lastCreatedAtTime = LocalDateTime.parse(lastCreatedAt, formatter)
+                        .atZone(ZoneId.of("Asia/Seoul"))
+                        .withZoneSameInstant(ZoneId.of("UTC"))
+                        .toLocalDateTime();
             }
         } catch (Exception e) {
             log.warn("lastCreatedAt 파싱 실패, 기본값 null 사용: {}", lastCreatedAt);
@@ -59,18 +62,19 @@ public class ChatController {
         Long userId = Long.valueOf(principal.getName());
         UserInfoResponse userInfo = userService.getUserInfo(userId);
 
-        // 한국 시간 기준 LocalDateTime 생성
+        // 한국 시간 기준 LocalDateTime 생성 -> DB는 UTC로 저장
         LocalDateTime nowKST = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+
+        chatService.saveMessageAsync(containerId, userId, nowKST, msg.getMessage());
 
         ChatResponse response = new ChatResponse(
                 userId,
                 userInfo.getUserName(),
                 userInfo.getUserImgUrl(),
                 msg.getMessage(),
-                nowKST.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) // 문자열로 한국 시간 전달
+                nowKST.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) // KST 문자열
         );
 
-        chatService.saveMessageAsync(containerId, userId, msg.getMessage());
         simpMessagingTemplate.convertAndSend("/sub/chat/" + containerId, response);
     }
 

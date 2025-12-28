@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,12 +48,19 @@ public class ChatService {
     // 채팅 저장
     @Transactional
     @Async
-    public void saveMessageAsync(Long containerId, Long userId, String message) {
+    public void saveMessageAsync(Long containerId, Long userId, LocalDateTime kstTime, String message) {
         try {
+            // KST 시간 -> UTC로 변환 후 DB 저장
+            LocalDateTime utcTime = kstTime
+                    .atZone(ZoneId.of("Asia/Seoul"))
+                    .withZoneSameInstant(ZoneId.of("UTC"))
+                    .toLocalDateTime();
+
             Chat chat = Chat.builder()
                     .container(containerRepository.getReferenceById(containerId))
                     .sender(userRepository.getReferenceById(userId))
                     .message(message)
+                    .createdAt(utcTime) // DB 저장은 UTC
                     .build();
             chatRepository.save(chat);
         } catch (Exception e) {
