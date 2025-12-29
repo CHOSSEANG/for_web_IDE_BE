@@ -190,6 +190,7 @@ public class ContainerController {
 
         return users.stream()
                 .map(user -> new UserInfoResponse(
+                    user.getClerkId(),
                         user.getName(),
                         user.getProfileImageUrl()
                 ))
