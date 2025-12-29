@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -37,6 +38,10 @@ public class CodingSession {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        if (this.recordDate == null) {
+            this.recordDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        }
     }
+
 }
